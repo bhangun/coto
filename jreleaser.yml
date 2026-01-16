@@ -39,22 +39,34 @@ distributions:
       name: pecel
     artifacts:
       - path: ./dist/linux-amd64/pecel
-        platform: 'linux_amd64'
+        platform: 'linux-x86_64'
+        extraProperties:
+          packager: brew,chocolatey
         transform: './dist/linux-amd64/pecel -> {{distributionName}}'
       - path: ./dist/linux-arm64/pecel
-        platform: 'linux_arm64'
+        platform: 'linux-aarch_64'
+        extraProperties:
+          packager: brew,chocolatey
         transform: './dist/linux-arm64/pecel -> {{distributionName}}'
       - path: ./dist/darwin-amd64/pecel
-        platform: 'darwin_amd64'
+        platform: 'osx-x86_64'
+        extraProperties:
+          packager: brew,chocolatey
         transform: './dist/darwin-amd64/pecel -> {{distributionName}}'
       - path: ./dist/darwin-arm64/pecel
-        platform: 'darwin_arm64'
+        platform: 'osx-aarch_64'
+        extraProperties:
+          packager: brew,chocolatey
         transform: './dist/darwin-arm64/pecel -> {{distributionName}}'
       - path: ./dist/windows-amd64/pecel.exe
-        platform: 'windows_amd64'
+        platform: 'windows-x86_64'
+        extraProperties:
+          packager: brew,chocolatey
         transform: './dist/windows-amd64/pecel.exe -> {{distributionName}}.exe'
       - path: ./dist/windows-arm64/pecel.exe
-        platform: 'windows_arm64'
+        platform: 'windows-aarch_64'
+        extraProperties:
+          packager: brew,chocolatey
         transform: './dist/windows-arm64/pecel.exe -> {{distributionName}}.exe'
 
 signing:
@@ -88,10 +100,3 @@ packagers:
       name: pecel-chocolatey
       branch: main
     packageName: pecel
-
-files:
-  active: RELEASE
-  artifacts:
-    - path: './dist/**/*pecel*'
-      extraProperties:
-        packager: brew,chocolatey
