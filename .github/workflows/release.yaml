@@ -30,19 +30,27 @@ jobs:
         with:
           go-version: 'stable'
 
-      - name: Setup JReleaser
-        uses: jreleaser/setup-jreleaser@v2
+      - name: Setup Java
+        uses: actions/setup-java@v4
         with:
-          version: latest
+          distribution: temurin
+          java-version: 17
+
+      - name: Install JReleaser
+        run: |
+          curl -sL https://github.com/jreleaser/jreleaser/releases/latest/download/jreleaser-cli-bin.zip -o jreleaser-cli-bin.zip
+          unzip jreleaser-cli-bin.zip
+          chmod +x jreleaser-*/bin/jreleaser
+          echo "$(pwd)/jreleaser-*/bin" >> $GITHUB_PATH
 
       - name: Build
         run: |
           make build-all
 
       - name: JReleaser release
-        uses: jreleaser/release-action@v2
-        with:
-          arguments: release -d
+        run: |
+          jreleaser version
+          jreleaser release -d
         env:
           JRELEASER_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           JRELEASER_PROJECT_VERSION: ${{ github.ref_name }}
