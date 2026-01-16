@@ -46,7 +46,9 @@ jobs:
           version: ${{ steps.jreleaser.outputs.version }}
 
       - name: Build
-        run: make build
+        run: |
+          cd tools/pecel
+          make build
 
       - name: JReleaser release
         uses: jreleaser/release-action@v2

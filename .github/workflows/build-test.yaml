@@ -18,7 +18,11 @@ jobs:
         go-version: 'stable'
 
     - name: Build
-      run: make build
+      run: |
+        cd tools/pecel
+        make build
 
     - name: Test
-      run: make test
+      run: |
+        cd tools/pecel
+        make test
