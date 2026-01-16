@@ -18,8 +18,8 @@ release:
     update:
       enabled: true
       sections:
-        - body
-        - name
+        - BODY
+        - ASSETS
 
 distributions:
   pecel:
