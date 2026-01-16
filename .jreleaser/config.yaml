@@ -48,7 +48,8 @@ distributions:
 
 signing:
   active: ALWAYS
-  armored: true
+  pgp:
+    armored: true
 
 announce:
   twitter:
@@ -70,15 +71,14 @@ packagers:
     commitAuthor:
       name: bhangun
       email: n90d1n9@gmail.com
-    tap:
+    repository:
       active: RELEASE
       owner: bhangun
       name: homebrew-pecel
       branch: main
     formulaName: pecel
     skipTemplates: []
-    dependencies:
-      - name: git
+    dependencies: []
 
   chocolatey:
     active: RELEASE
