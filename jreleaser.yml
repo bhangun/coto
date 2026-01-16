@@ -59,6 +59,7 @@ distributions:
 
 signing:
   active: NEVER
+  verify: false
   pgp:
     armored: true
 
