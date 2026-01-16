@@ -16,8 +16,10 @@ release:
     prerelease:
       enabled: false
     update:
-      - body
-      - name
+      enabled: true
+      sections:
+        - body
+        - name
 
 distributions:
   pecel:
