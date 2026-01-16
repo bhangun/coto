@@ -1,13 +1,13 @@
 # Pecel Windows Installation Script
 param(
     [string]$Action = "install",
-    [string]$Version = "v1.0.0"
+    [string]$Version = "v0.1.0"
 )
 
 $ErrorActionPreference = "Stop"
 
 # Configuration
-$Repo = "yourusername/pecel"
+$Repo = "bhangun/pecel"
 $BinaryName = "pecel.exe"
 $InstallDir = "$env:USERPROFILE\bin"
 $TempDir = "$env:TEMP\pecel-install"
@@ -41,31 +41,58 @@ $Arch = switch ($env:PROCESSOR_ARCHITECTURE) {
 $Platform = "windows"
 
 function Install-Binary {
-    Write-Info "Downloading pecel $Version for $Platform/$Arch..."
-    
-    $DownloadUrl = "https://github.com/$Repo/releases/download/$Version/${BinaryName}-${Platform}-${Arch}.exe"
-    
+    Write-Info "Attempting to download pecel $Version for $Platform/$Arch..."
+
+    $DownloadUrl = "https://github.com/$Repo/releases/download/$Version/pecel-$Platform-$Arch.exe"
+
     # Create temp directory
     if (Test-Path $TempDir) {
         Remove-Item -Path $TempDir -Recurse -Force
     }
     New-Item -ItemType Directory -Path $TempDir -Force | Out-Null
-    
-    # Download binary
+
+    # Try to download binary
     try {
         Invoke-WebRequest -Uri $DownloadUrl -OutFile "$TempDir\$BinaryName"
+        Write-Info "Successfully downloaded binary"
     } catch {
-        Write-Error "Failed to download binary: $_"
+        Write-Warn "Failed to download binary: $_"
+        Write-Info "Attempting to build from source..."
+
+        # Check if Go is installed
+        if (!(Get-Command "go" -ErrorAction SilentlyContinue)) {
+            Write-Error "Go is required to build from source but is not installed.`nPlease install Go first or check the release at: https://github.com/$Repo/releases"
+        }
+
+        # Clone repo and build
+        $RepoDir = "$TempDir\repo"
+        git clone "https://github.com/$Repo.git" $RepoDir
+        if ($LASTEXITCODE -ne 0) {
+            Write-Error "Failed to clone repository"
+        }
+
+        Set-Location $RepoDir
+        .\make.bat build 2>$null
+        if ($LASTEXITCODE -ne 0) {
+            # If make.bat doesn't exist, try manual build
+            go build -o bin/pecel.exe ./cmd/main
+            if ($LASTEXITCODE -ne 0) {
+                Write-Error "Build failed"
+            }
+        }
+
+        Copy-Item "bin\pecel.exe" "$TempDir\$BinaryName" -Force
+        Write-Info "Successfully built from source"
     }
-    
+
     # Create install directory if it doesn't exist
     if (-not (Test-Path $InstallDir)) {
         New-Item -ItemType Directory -Path $InstallDir -Force | Out-Null
     }
-    
+
     # Install binary
     Copy-Item "$TempDir\$BinaryName" "$InstallDir\$BinaryName" -Force
-    
+
     # Add to PATH if not already present
     $CurrentPath = [Environment]::GetEnvironmentVariable("Path", "User")
     if ($CurrentPath -notlike "*$InstallDir*") {
@@ -73,10 +100,10 @@ function Install-Binary {
         [Environment]::SetEnvironmentVariable("Path", "$CurrentPath;$InstallDir", "User")
         $env:Path += ";$InstallDir"
     }
-    
+
     # Cleanup
     Remove-Item -Path $TempDir -Recurse -Force
-    
+
     Write-Info "Installation completed!"
     Write-Info "Run 'pecel --help' to get started"
 }

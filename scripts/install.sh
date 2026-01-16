@@ -3,8 +3,8 @@
 # Pecel Enhanced Installation Script
 set -e
 
-VERSION="v1.1.0"
-REPO="github.com/bhangun/pecel"
+VERSION="v0.1.0"
+REPO="bhangun/pecel"
 INSTALL_DIR="/usr/local/bin"
 BINARY_NAME="pecel"
 OS="$(uname -s)"
@@ -50,7 +50,7 @@ print_error() {
 print_banner() {
     echo -e "${CYAN}"
     echo "╔══════════════════════════════════════════════════════╗"
-    echo "║          Pecel CLI Installer v1.1.0          ║"
+    echo "║          Pecel CLI Installer v0.1.0          ║"
     echo "╚══════════════════════════════════════════════════════╝"
     echo -e "${NC}"
 }
@@ -58,7 +58,7 @@ print_banner() {
 # Check for existing installation
 check_existing() {
     if command -v "$BINARY_NAME" &> /dev/null; then
-        CURRENT_VERSION=$($BINARY_NAME -version 2>/dev/null || echo "unknown")
+        CURRENT_VERSION=$($BINARY_NAME --version 2>/dev/null || echo "unknown")
         print_info "Found existing installation: $CURRENT_VERSION"
         return 0
     fi
@@ -67,48 +67,67 @@ check_existing() {
 
 # Download and install
 install_binary() {
-    print_info "Downloading pecel $VERSION for $PLATFORM/$ARCH..."
-    
+    print_info "Attempting to download pecel $VERSION for $PLATFORM/$ARCH..."
+
     DOWNLOAD_URL="https://github.com/$REPO/releases/download/$VERSION/${BINARY_NAME}-${PLATFORM}-${ARCH}"
-    
+
     # Create temp directory
     TEMP_DIR=$(mktemp -d)
     trap "rm -rf $TEMP_DIR" EXIT
-    
-    # Download binary
+
+    # Try to download binary from GitHub release
     if ! curl -sSL -o "$TEMP_DIR/$BINARY_NAME" "$DOWNLOAD_URL"; then
-        print_error "Failed to download binary from $DOWNLOAD_URL"
-        print_info "Trying alternative URL..."
-        DOWNLOAD_URL="https://github.com/$REPO/releases/latest/download/${BINARY_NAME}-${PLATFORM}-${ARCH}"
-        curl -sSL -o "$TEMP_DIR/$BINARY_NAME" "$DOWNLOAD_URL" || {
-            print_error "All download attempts failed"
+        print_warn "Failed to download binary from $DOWNLOAD_URL"
+        print_info "Attempting to build from source..."
+
+        # Check if Go is installed
+        if ! command -v go &> /dev/null; then
+            print_error "Go is required to build from source but is not installed."
+            print_info "Please install Go first or check the release at: https://github.com/$REPO/releases"
+            exit 1
+        fi
+
+        # Clone repo and build
+        git clone https://github.com/$REPO.git "$TEMP_DIR/repo" || {
+            print_error "Failed to clone repository"
             exit 1
         }
+
+        cd "$TEMP_DIR/repo"
+        make build || {
+            print_error "Build failed"
+            exit 1
+        }
+
+        cp bin/pecel "$TEMP_DIR/$BINARY_NAME"
+        print_success "Successfully built from source"
+    else
+        print_success "Successfully downloaded binary"
     fi
-    
+
     # Make binary executable
     chmod +x "$TEMP_DIR/$BINARY_NAME"
-    
+
     # Verify binary works
     if ! "$TEMP_DIR/$BINARY_NAME" --version &> /dev/null; then
-        print_error "Downloaded binary appears to be invalid"
+        print_error "Downloaded/built binary appears to be invalid"
         exit 1
     fi
-    
+
     # Show binary info
     BINARY_INFO=$("$TEMP_DIR/$BINARY_NAME" --version 2>/dev/null || echo "Unknown version")
     print_info "Binary version: $BINARY_INFO"
-    
+
     # Install to system
     print_info "Installing to $INSTALL_DIR..."
     sudo mkdir -p "$INSTALL_DIR"
     sudo mv "$TEMP_DIR/$BINARY_NAME" "$INSTALL_DIR/$BINARY_NAME"
-    
+
     # Verify installation
     if command -v "$BINARY_NAME" &> /dev/null; then
         print_success "Installation completed successfully!"
         print_info "Run '$BINARY_NAME --help' to see all options"
-        
+
         # Show example commands
         echo -e "${YELLOW}"
         echo "Examples:"

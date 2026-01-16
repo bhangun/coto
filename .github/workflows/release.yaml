@@ -41,7 +41,7 @@ jobs:
           echo "version=${VERSION#v}" >> $GITHUB_OUTPUT
 
       - name: Setup JReleaser
-        uses: jreleaser/setup-jreleaser@v1
+        uses: jreleaser/jreleaser-actions/setup@v1
         with:
           version: ${{ steps.jreleaser.outputs.version }}
 
@@ -51,7 +51,7 @@ jobs:
           make build-all
 
       - name: JReleaser release
-        uses: jreleaser/release-action@v2
+        uses: jreleaser/jreleaser-actions/release@v1
         with:
           arguments: release -d
         env:
