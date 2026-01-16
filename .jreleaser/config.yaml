@@ -1,12 +1,23 @@
 project:
   name: pecel
-  description: A powerful CLI tool to recursively combine file contents from directories
+  description: Pecel CLI - File combination utility
+  longDescription: |
+    A powerful CLI tool to recursively combine file contents from directories and subdirectories.
   links:
     homepage: https://github.com/bhangun/pecel
+    bugTracker: https://github.com/bhangun/pecel/issues
+    help: https://github.com/bhangun/pecel/blob/main/README.md
   authors:
     - Bhangun
   license: MIT
   inceptionYear: 2024
+  tags:
+    - cli
+    - go
+    - golang
+    - utility
+    - tool
+    - file-combiner
 
 release:
   github:
@@ -90,20 +101,6 @@ packagers:
       name: pecel-chocolatey
       branch: main
     packageName: pecel
-    project:
-      tags:
-        license: MIT
-        projectUrl: https://github.com/bhangun/pecel
-        packageSourceUrl: https://github.com/bhangun/pecel
-        projectSourceUrl: https://github.com/bhangun/pecel
-        docsUrl: https://github.com/bhangun/pecel/blob/main/README.md
-        mailingListUrl: https://github.com/bhangun/pecel/issues
-        bugTrackerUrl: https://github.com/bhangun/pecel/issues
-        tags: cli,go,golang,utility,tool,file-combiner
-        summary: Pecel CLI - File combination utility
-        description: |
-          A powerful CLI tool to recursively combine file contents from directories and subdirectories.
-        releaseNotesUrl: https://github.com/bhangun/pecel/releases/tag/{{tagName}}
 
 files:
   active: RELEASE
