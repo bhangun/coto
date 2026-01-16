@@ -24,24 +24,24 @@ distributions:
     executable:
       name: pecel
     artifacts:
-      - path: .//bin/pecel
+      - path: ./bin/pecel
         platform: 'linux_amd64'
-        transform: './/bin/pecel -> {{distributionName}}'
-      - path: .//bin/pecel
+        transform: './bin/pecel -> {{distributionName}}'
+      - path: ./bin/pecel
         platform: 'linux_arm64'
-        transform: './/bin/pecel -> {{distributionName}}'
-      - path: .//bin/pecel
+        transform: './bin/pecel -> {{distributionName}}'
+      - path: ./bin/pecel
         platform: 'darwin_amd64'
-        transform: './/bin/pecel -> {{distributionName}}'
-      - path: .//bin/pecel
+        transform: './bin/pecel -> {{distributionName}}'
+      - path: ./bin/pecel
         platform: 'darwin_arm64'
-        transform: './/bin/pecel -> {{distributionName}}'
-      - path: .//bin/pecel.exe
+        transform: './bin/pecel -> {{distributionName}}'
+      - path: ./bin/pecel.exe
         platform: 'windows_amd64'
-        transform: './/bin/pecel.exe -> {{distributionName}}.exe'
-      - path: .//bin/pecel.exe
+        transform: './bin/pecel.exe -> {{distributionName}}.exe'
+      - path: ./bin/pecel.exe
         platform: 'windows_arm64'
-        transform: './/bin/pecel.exe -> {{distributionName}}.exe'
+        transform: './bin/pecel.exe -> {{distributionName}}.exe'
 
 signing:
   active: ALWAYS
@@ -56,7 +56,7 @@ packagers:
     tap:
       active: ALWAYS
       owner: bhangun
-      name: pecel
+      name: homebrew-pecel
       branch: main
     formulaName: pecel
     skipTemplates: []

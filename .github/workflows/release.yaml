@@ -47,8 +47,8 @@ jobs:
 
       - name: Build
         run: |
-          
-          make build
+
+          make build-all
 
       - name: JReleaser release
         uses: jreleaser/release-action@v2

@@ -107,8 +107,8 @@ cross-compile:
 
 checksums:
 	@echo "$(CYAN)Generating SHA256 checksums...$(NC)"
-	cd dist && find . -type f -name "pecel*" -exec sha256sum {} \; > checksums.txt
-	@echo "$(GREEN)✓ Checksums generated in dist/checksums.txt$(NC)"
+	@if [ -d "dist" ]; then cd dist && find . -type f -name "pecel*" -exec sha256sum {} \; > ../checksums.txt; fi
+	@echo "$(GREEN)✓ Checksums generated in checksums.txt$(NC)"
 
 benchmark:
 	@echo "$(CYAN)Running benchmarks...$(NC)"
