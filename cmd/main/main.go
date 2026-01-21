@@ -251,13 +251,13 @@ func main() {
 	}
 
 	if *versionFlag {
-		fmt.Printf("pecel v%s\n", version)
+		fmt.Printf("coto v%s\n", version)
 		os.Exit(0)
 	}
 
 	// Check if no flags were provided and enter interactive mode
 	if !hasAnyFlagSet() && len(os.Args) == 1 {
-		fmt.Printf("%s Welcome to Pecel v%s - Interactive Mode\n\n", cyan("→"), version)
+		fmt.Printf("%s Welcome to Coto v%s - Interactive Mode\n\n", cyan("→"), version)
 
 		// Prompt for input directory with validation
 		*inputDir = promptUserWithValidation("Enter input directory path", ".", validateDirectory)
@@ -427,7 +427,7 @@ func main() {
 	}
 
 	if !*quiet {
-		fmt.Printf("%s Starting Pecel v%s\n", cyan("→"), version)
+		fmt.Printf("%s Starting Coto v%s\n", cyan("→"), version)
 		fmt.Printf("%s Input directory: %s\n", cyan("→"), config.InputDir)
 		fmt.Printf("%s Output file: %s\n", cyan("→"), config.OutputFile)
 		if *dryRun {
@@ -710,7 +710,7 @@ func writeTextOutput(fileInfos []FileInfo, writer io.Writer, stats Stats) (int64
 	totalBytes := int64(0)
 	bufWriter := bufio.NewWriter(writer)
 
-	header := fmt.Sprintf("Pecel Output\n")
+	header := fmt.Sprintf("Coto Output\n")
 	header += fmt.Sprintf("Generated: %s\n", time.Now().Format("2006-01-02 15:04:05"))
 	header += fmt.Sprintf("Files: %d | Directories: %d | Total Size: %s\n\n",
 		stats.FilesProcessed, stats.Directories, formatBytes(stats.TotalBytes))
@@ -812,7 +812,7 @@ func writeMarkdownOutput(fileInfos []FileInfo, writer io.Writer, stats Stats) (i
 	totalBytes := int64(0)
 	bufWriter := bufio.NewWriter(writer)
 
-	header := fmt.Sprintf("# Pecel Output\n\n")
+	header := fmt.Sprintf("# Coto Output\n\n")
 	header += fmt.Sprintf("**Generated**: %s  \n", time.Now().Format("2006-01-02 15:04:05"))
 	header += fmt.Sprintf("**Files**: %d | **Directories**: %d | **Total Size**: %s  \n\n",
 		stats.FilesProcessed, stats.Directories, formatBytes(stats.TotalBytes))
@@ -922,7 +922,7 @@ func isFlagSet(name string) bool {
 // Function to display help
 func init() {
 	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "%s Pecel v%s - Combine files recursively\n\n", cyan("📁"), version)
+		fmt.Fprintf(os.Stderr, "%s Coto v%s - Combine files recursively\n\n", cyan("📁"), version)
 		fmt.Fprintf(os.Stderr, "Usage: %s [options]\n\n", os.Args[0])
 
 		fmt.Fprintf(os.Stderr, "%s Basic Options:\n", cyan("📋"))

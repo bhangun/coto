@@ -1,8 +1,8 @@
 # Binaries
 bin/
 dist/
-pecel
-pecel.exe
+coto
+coto.exe
 
 # Build artifacts
 *.exe

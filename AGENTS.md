@@ -1,15 +1,15 @@
-# Pecel CLI - AI Agent Instructions
+# Coto CLI - AI Agent Instructions
 
-This document provides instructions for AI agents (like GitHub Copilot, Cursor AI, Claude, etc.) to effectively work with the Pecel CLI project.
+This document provides instructions for AI agents (like GitHub Copilot, Cursor AI, Claude, etc.) to effectively work with the Coto CLI project.
 
 ## Project Overview
 
-The Pecel CLI is a Go-based command-line tool that recursively combines file contents from directories and subdirectories, separating each file with metadata headers. It features an interactive mode, advanced filtering, and multiple output formats.
+The Coto CLI is a Go-based command-line tool that recursively combines file contents from directories and subdirectories, separating each file with metadata headers. It features an interactive mode, advanced filtering, and multiple output formats.
 
 ## Project Structure
 
 ```
-pecel/
+coto/
 ├── cmd/
 │   └── main/
 │       └── main.go        # Main application logic
@@ -27,9 +27,9 @@ pecel/
 │   └── config.json        # Sample configuration
 ├── completions/
 │   ├── bash/
-│   │   └── pecel          # Bash completion
+│   │   └── coto          # Bash completion
 │   └── zsh/
-│       └── _pecel         # Zsh completion
+│       └── _coto         # Zsh completion
 ├── AGENTS.md              # This file
 ├── README.md              # User documentation
 └── Dockerfile             # Container build
@@ -93,10 +93,10 @@ The project uses JReleaser for automated releases and distribution to package ma
 ### JReleaser Configuration Example
 ```yaml
 project:
-  name: pecel
+  name: coto
   description: A powerful CLI tool to recursively combine file contents from directories
   links:
-    homepage: https://github.com/bhangun/pecel
+    homepage: https://github.com/bhangun/coto
   authors:
     - Bhangun
   license: MIT
@@ -104,29 +104,29 @@ project:
 release:
   github:
     owner: bhangun
-    name: pecel
+    name: coto
     overwrite: true
     prerelease: false
 
 distributions:
-  pecel:
+  coto:
     type: BINARY
     artifacts:
-      - path: ./pecel
+      - path: ./coto
         platform: 'linux_amd64'
-        transform: 'pecel -> {{distributionName}}'
-      - path: ./pecel
+        transform: 'coto -> {{distributionName}}'
+      - path: ./coto
         platform: 'linux_arm64'
-        transform: 'pecel -> {{distributionName}}'
-      - path: ./pecel
+        transform: 'coto -> {{distributionName}}'
+      - path: ./coto
         platform: 'darwin_amd64'
-        transform: 'pecel -> {{distributionName}}'
-      - path: ./pecel
+        transform: 'coto -> {{distributionName}}'
+      - path: ./coto
         platform: 'darwin_arm64'
-        transform: 'pecel -> {{distributionName}}'
-      - path: ./pecel.exe
+        transform: 'coto -> {{distributionName}}'
+      - path: ./coto.exe
         platform: 'windows_amd64'
-        transform: 'pecel.exe -> {{distributionName}}.exe'
+        transform: 'coto.exe -> {{distributionName}}.exe'
 
 publishers:
   brew:
@@ -137,9 +137,9 @@ publishers:
     tap:
       active: ALWAYS
       owner: bhangun
-      name: pecel
+      name: coto
       branch: main
-    formulaName: pecel
+    formulaName: coto
     skipTemplates: []
 
   chocolatey:
@@ -150,23 +150,23 @@ publishers:
     repository:
       active: ALWAYS
       owner: bhangun
-      name: pecel-chocolatey
+      name: coto-chocolatey
       branch: main
-    packageName: pecel
+    packageName: coto
     project:
       tags:
         license: MIT
-        projectUrl: https://github.com/bhangun/pecel
-        packageSourceUrl: https://github.com/bhangun/pecel
-        projectSourceUrl: https://github.com/bhangun/pecel
-        docsUrl: https://github.com/bhangun/pecel/blob/main/README.md
-        mailingListUrl: https://github.com/bhangun/pecel/issues
-        bugTrackerUrl: https://github.com/bhangun/pecel/issues
+        projectUrl: https://github.com/bhangun/coto
+        packageSourceUrl: https://github.com/bhangun/coto
+        projectSourceUrl: https://github.com/bhangun/coto
+        docsUrl: https://github.com/bhangun/coto/blob/main/README.md
+        mailingListUrl: https://github.com/bhangun/coto/issues
+        bugTrackerUrl: https://github.com/bhangun/coto/issues
         tags: cli,go,golang,utility,tool,file-combiner
-        summary: Pecel CLI - File combination utility
+        summary: Coto CLI - File combination utility
         description: |
           A powerful CLI tool to recursively combine file contents from directories and subdirectories.
-        releaseNotesUrl: https://github.com/bhangun/pecel/releases/tag/{{tagName}}
+        releaseNotesUrl: https://github.com/bhangun/coto/releases/tag/{{tagName}}
 ```
 
 ### Deployment Process
@@ -178,15 +178,15 @@ publishers:
 6. **Publish**: Upload to GitHub Releases, package managers
 
 ### Homebrew Tap
-- Custom tap: `bhangun/homebrew-pecel`
+- Custom tap: `bhangun/homebrew-coto`
 - Formula automatically generated by JReleaser
 - Published to GitHub Releases assets
-- Install command: `brew install bhangun/pecel/pecel`
+- Install command: `brew install bhangun/coto/coto`
 
 ### Chocolatey Package
 - Package automatically generated by JReleaser
 - Published to Chocolatey community repository
-- Install command: `choco install pecel`
+- Install command: `choco install coto`
 
 ## Automated Installation
 
@@ -195,12 +195,12 @@ The project provides one-line installation commands:
 
 **Linux/macOS:**
 ```bash
-curl -sSL https://raw.githubusercontent.com/bhangun/pecel/main/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/bhangun/coto/main/install.sh | bash
 ```
 
 **Windows:**
 ```powershell
-iwr -useb https://raw.githubusercontent.com/bhangun/pecel/main/install.ps1 | iex
+iwr -useb https://raw.githubusercontent.com/bhangun/coto/main/install.ps1 | iex
 ```
 
 ### Installation Script Features
@@ -249,7 +249,7 @@ Common issues to watch for:
 ```bash
 # Build for current platform
 make build
-# Binary will be available at bin/pecel
+# Binary will be available at bin/coto
 
 # Build for all platforms
 make cross-compile
@@ -409,9 +409,9 @@ For critical bugs:
 
 The tool supports these environment variables (if implemented):
 
-- `PECEL_INPUT_DIR`: Default input directory
-- `PECEL_OUTPUT_FILE`: Default output file
-- `PECEL_EXTENSIONS`: Default file extensions
+- `COTO_INPUT_DIR`: Default input directory
+- `COTO_OUTPUT_FILE`: Default output file
+- `COTO_EXTENSIONS`: Default file extensions
 
 ## Dependencies
 
@@ -453,10 +453,10 @@ When adding dependencies:
 - Verify OS/architecture compatibility
 
 ### Tool Doesn't Run
-- Check file permissions: `chmod +x pecel`
-- Verify in PATH: `which pecel`
-- Check dependencies: `ldd pecel` (Linux)
-- Try rebuilding: `go build -o pecel .`
+- Check file permissions: `chmod +x coto`
+- Verify in PATH: `which coto`
+- Check dependencies: `ldd coto` (Linux)
+- Try rebuilding: `go build -o coto .`
 
 ### Permission Errors
 - Use `sudo` for system-wide install

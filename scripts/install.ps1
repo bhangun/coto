@@ -1,4 +1,4 @@
-# Pecel Windows Installation Script
+# Coto Windows Installation Script
 param(
     [string]$Action = "install",
     [string]$Version = "v0.1.0"
@@ -7,10 +7,10 @@ param(
 $ErrorActionPreference = "Stop"
 
 # Configuration
-$Repo = "bhangun/pecel"
-$BinaryName = "pecel.exe"
+$Repo = "bhangun/coto"
+$BinaryName = "coto.exe"
 $InstallDir = "$env:USERPROFILE\bin"
-$TempDir = "$env:TEMP\pecel-install"
+$TempDir = "$env:TEMP\coto-install"
 
 # Colors
 $Green = "`e[32m"
@@ -41,9 +41,9 @@ $Arch = switch ($env:PROCESSOR_ARCHITECTURE) {
 $Platform = "windows"
 
 function Install-Binary {
-    Write-Info "Attempting to download pecel $Version for $Platform/$Arch..."
+    Write-Info "Attempting to download coto $Version for $Platform/$Arch..."
 
-    $DownloadUrl = "https://github.com/$Repo/releases/download/$Version/pecel-$Platform-$Arch.exe"
+    $DownloadUrl = "https://github.com/$Repo/releases/download/$Version/coto-$Platform-$Arch.exe"
 
     # Create temp directory
     if (Test-Path $TempDir) {
@@ -75,13 +75,13 @@ function Install-Binary {
         .\make.bat build 2>$null
         if ($LASTEXITCODE -ne 0) {
             # If make.bat doesn't exist, try manual build
-            go build -o bin/pecel.exe ./cmd/main
+            go build -o bin/coto.exe ./cmd/main
             if ($LASTEXITCODE -ne 0) {
                 Write-Error "Build failed"
             }
         }
 
-        Copy-Item "bin\pecel.exe" "$TempDir\$BinaryName" -Force
+        Copy-Item "bin\coto.exe" "$TempDir\$BinaryName" -Force
         Write-Info "Successfully built from source"
     }
 
@@ -105,7 +105,7 @@ function Install-Binary {
     Remove-Item -Path $TempDir -Recurse -Force
 
     Write-Info "Installation completed!"
-    Write-Info "Run 'pecel --help' to get started"
+    Write-Info "Run 'coto --help' to get started"
 }
 
 function Uninstall {
@@ -119,9 +119,9 @@ function Uninstall {
         $NewPath = $CurrentPath -replace [regex]::Escape($InstallDir), "" -replace ";;", ";"
         [Environment]::SetEnvironmentVariable("Path", $NewPath.TrimEnd(';'), "User")
         
-        Write-Info "Pecel has been uninstalled"
+        Write-Info "Coto has been uninstalled"
     } else {
-        Write-Warn "Pecel is not installed"
+        Write-Warn "Coto is not installed"
     }
 }
 

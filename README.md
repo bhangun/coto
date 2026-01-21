@@ -1,10 +1,10 @@
-# Pecel CLI
+# Coto CLI
 
 A powerful CLI tool to recursively combine file contents from directories and subdirectories with an enhanced interactive mode and comprehensive filtering options.
 
 ## 🚀 Features
 
-- **Interactive Mode**: When run without arguments, Pecel enters an interactive mode prompting for all options
+- **Interactive Mode**: When run without arguments, Coto enters an interactive mode prompting for all options
 - **Recursive File Combination**: Combines files from directories and subdirectories
 - **Multiple Output Formats**: Text, JSON, XML, and Markdown
 - **Flexible Filtering**: Filter by file extensions, size, patterns, and more
@@ -18,16 +18,16 @@ A powerful CLI tool to recursively combine file contents from directories and su
 
 ### Automated Installation (Recommended)
 
-The easiest way to install Pecel is using the automated installation scripts:
+The easiest way to install Coto is using the automated installation scripts:
 
 **macOS/Linux (using curl):**
 ```bash
-curl -sSL https://raw.githubusercontent.com/bhangun/pecel/main/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/bhangun/coto/main/install.sh | bash
 ```
 
 **Windows (using PowerShell):**
 ```powershell
-iwr -useb https://raw.githubusercontent.com/bhangun/pecel/main/install.ps1 | iex
+iwr -useb https://raw.githubusercontent.com/bhangun/coto/main/install.ps1 | iex
 ```
 
 These scripts will automatically:
@@ -43,66 +43,66 @@ For users who prefer package managers:
 
 **Homebrew (macOS/Linux):**
 ```bash
-brew install bhangun/pecel/pecel
+brew install bhangun/coto/coto
 ```
 
 **Chocolatey (Windows):**
 ```powershell
-choco install pecel
+choco install coto
 ```
 
 ### From Source
 ```bash
-git clone https://github.com/bhangun/pecel.git
-cd pecel
+git clone https://github.com/bhangun/coto.git
+cd coto
 make build
-# Binary will be available at bin/pecel
-./bin/pecel --help
+# Binary will be available at bin/coto
+./bin/coto --help
 ```
 
 ### Manual Installation
 ```bash
 # Build from source
 make build
-# The binary will be available at bin/pecel
+# The binary will be available at bin/coto
 # Make it executable and move to your PATH
-chmod +x bin/pecel
-sudo mv bin/pecel /usr/local/bin/
+chmod +x bin/coto
+sudo mv bin/coto /usr/local/bin/
 ```
 
 ## 🛠 Usage
 
 ### Interactive Mode (Recommended)
-Simply run Pecel without any arguments to enter interactive mode:
+Simply run Coto without any arguments to enter interactive mode:
 ```bash
-./pecel
+./coto
 ```
 
 ### Command Line Mode
 ```bash
 # Basic usage
-pecel -i ./src -o combined.txt
+coto -i ./src -o combined.txt
 
 # Filter by file extensions
-pecel -ext .go,.js,.py -o output.txt
+coto -ext .go,.js,.py -o output.txt
 
 # Multiple filters
-pecel -i ./src -ext .go,.md --min-size 100 --max-size 1000000
+coto -i ./src -ext .go,.md --min-size 100 --max-size 1000000
 
 # JSON output with compression
-pecel --format json --compress --output output.json.gz
+coto --format json --compress --output output.json.gz
 
 # Parallel processing
-pecel --parallel 4 --verbose
+coto --parallel 4 --verbose
 
 # Exclude patterns
-pecel --exclude "\.git|node_modules|\.DS_Store"
+coto --exclude "\.git|node_modules|\.DS_Store"
 
 # Configuration file
-pecel --config config.json
+coto --config config.json
 
 # Dry run to see what would be processed
-pecel --dry-run --verbose
+coto --dry-run --verbose
 ```
 
 
@@ -151,9 +151,9 @@ pecel --dry-run --verbose
 
 ## 🚀 Deployment
 
-Pecel uses [JReleaser](https://jreleaser.org/) for automated releases and distribution to package managers:
+Coto uses [JReleaser](https://jreleaser.org/) for automated releases and distribution to package managers:
 
-- **Homebrew**: Releases are automatically published to the custom tap at `bhangun/pecel`
+- **Homebrew**: Releases are automatically published to the custom tap at `bhangun/coto`
 - **Chocolatey**: Windows packages are automatically published to the Chocolatey Community Repository
 - **GitHub Releases**: Binaries for all platforms are attached to each release with checksums
 - **Automatic Signing**: All binaries are signed for security
@@ -161,19 +161,19 @@ Pecel uses [JReleaser](https://jreleaser.org/) for automated releases and distri
 ### Homebrew Installation
 After publication, users can install via Homebrew:
 ```bash
-brew tap bhangun/pecel
-brew install pecel
+brew tap bhangun/coto
+brew install coto
 ```
 
 Or in a single command:
 ```bash
-brew install bhangun/pecel/pecel
+brew install bhangun/coto/coto
 ```
 
 ### Chocolatey Installation
 On Windows, users can install via Chocolatey:
 ```powershell
-choco install pecel
+choco install coto
 ```
 
 The deployment workflow is triggered on tagged commits and handles:
@@ -187,8 +187,8 @@ The deployment workflow is triggered on tagged commits and handles:
 
 ```bash
 # Clone repository
-git clone https://github.com/bhangun/pecel.git
-cd pecel
+git clone https://github.com/bhangun/coto.git
+cd coto
 
 # Build
 make build

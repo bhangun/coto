@@ -1,12 +1,12 @@
 project:
-  name: pecel
-  description: Pecel CLI - File combination utility
+  name: coto
+  description: Coto CLI - File combination utility
   longDescription: |
     A powerful CLI tool to recursively combine file contents from directories and subdirectories.
   links:
-    homepage: https://github.com/bhangun/pecel
-    bugTracker: https://github.com/bhangun/pecel/issues
-    help: https://github.com/bhangun/pecel/blob/main/README.md
+    homepage: https://github.com/bhangun/coto
+    bugTracker: https://github.com/bhangun/coto/issues
+    help: https://github.com/bhangun/coto/blob/main/README.md
   authors:
     - Bhangun
   license: MIT
@@ -22,7 +22,7 @@ project:
 release:
   github:
     owner: bhangun
-    name: pecel
+    name: coto
     overwrite: true
     prerelease:
       enabled: false
@@ -33,41 +33,41 @@ release:
         - ASSETS
 
 distributions:
-  pecel:
+  coto:
     type: BINARY
     executable:
-      name: pecel
+      name: coto
     artifacts:
-      - path: ./dist/linux-amd64/pecel
+      - path: ./dist/linux-amd64/coto
         platform: 'linux-x86_64'
         extraProperties:
           packager: brew,chocolatey
-        transform: './dist/linux-amd64/pecel -> {{distributionName}}'
-      - path: ./dist/linux-arm64/pecel
+        transform: './dist/linux-amd64/coto -> {{distributionName}}'
+      - path: ./dist/linux-arm64/coto
         platform: 'linux-aarch_64'
         extraProperties:
           packager: brew,chocolatey
-        transform: './dist/linux-arm64/pecel -> {{distributionName}}'
-      - path: ./dist/darwin-amd64/pecel
+        transform: './dist/linux-arm64/coto -> {{distributionName}}'
+      - path: ./dist/darwin-amd64/coto
         platform: 'osx-x86_64'
         extraProperties:
           packager: brew,chocolatey
-        transform: './dist/darwin-amd64/pecel -> {{distributionName}}'
-      - path: ./dist/darwin-arm64/pecel
+        transform: './dist/darwin-amd64/coto -> {{distributionName}}'
+      - path: ./dist/darwin-arm64/coto
         platform: 'osx-aarch_64'
         extraProperties:
           packager: brew,chocolatey
-        transform: './dist/darwin-arm64/pecel -> {{distributionName}}'
-      - path: ./dist/windows-amd64/pecel.exe
+        transform: './dist/darwin-arm64/coto -> {{distributionName}}'
+      - path: ./dist/windows-amd64/coto.exe
         platform: 'windows-x86_64'
         extraProperties:
           packager: brew,chocolatey
-        transform: './dist/windows-amd64/pecel.exe -> {{distributionName}}.exe'
-      - path: ./dist/windows-arm64/pecel.exe
+        transform: './dist/windows-amd64/coto.exe -> {{distributionName}}.exe'
+      - path: ./dist/windows-arm64/coto.exe
         platform: 'windows-aarch_64'
         extraProperties:
           packager: brew,chocolatey
-        transform: './dist/windows-arm64/pecel.exe -> {{distributionName}}.exe'
+        transform: './dist/windows-arm64/coto.exe -> {{distributionName}}.exe'
 
 signing:
   active: NEVER
@@ -84,9 +84,9 @@ packagers:
     repository:
       active: RELEASE
       owner: bhangun
-      name: homebrew-pecel
+      name: homebrew-coto
       branch: main
-    formulaName: pecel
+    formulaName: coto
     skipTemplates: []
 
   chocolatey:
@@ -97,6 +97,6 @@ packagers:
     repository:
       active: RELEASE
       owner: bhangun
-      name: pecel-chocolatey
+      name: coto-chocolatey
       branch: main
-    packageName: pecel
+    packageName: coto

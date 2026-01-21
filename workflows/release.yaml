@@ -72,9 +72,9 @@ jobs:
         
     - name: Build
       run: |
-        OUTPUT_NAME="pecel"
+        OUTPUT_NAME="coto"
         if [ "${{ matrix.platform }}" = "windows" ]; then
-          OUTPUT_NAME="pecel.exe"
+          OUTPUT_NAME="coto.exe"
         fi
         GOOS=${{ matrix.platform }} GOARCH=amd64 \
           go build -ldflags="-s -w -X main.version=${{ env.VERSION }}" \
@@ -85,9 +85,9 @@ jobs:
     - name: Build ARM64 (Linux/macOS)
       if: matrix.os != 'windows-latest'
       run: |
-        OUTPUT_NAME="pecel"
+        OUTPUT_NAME="coto"
         if [ "${{ matrix.platform }}" = "windows" ]; then
-          OUTPUT_NAME="pecel.exe"
+          OUTPUT_NAME="coto.exe"
         fi
         GOOS=${{ matrix.platform }} GOARCH=arm64 \
           go build -ldflags="-s -w -X main.version=${{ env.VERSION }}" \
@@ -117,13 +117,13 @@ jobs:
     - name: Generate checksums
       run: |
         cd dist
-        find . -type f -name "pecel*" -exec sha256sum {} \; > checksums.txt
+        find . -type f -name "coto*" -exec sha256sum {} \; > checksums.txt
         
     - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
         files: |
-          dist/**/pecel*
+          dist/**/coto*
           dist/checksums.txt
         generate_release_notes: true
         draft: false
@@ -159,5 +159,5 @@ jobs:
         platforms: linux/amd64,linux/arm64
         push: ${{ github.event_name != 'pull_request' }}
         tags: |
-          bhangun/pecel:latest
-          bhangun/pecel:${{ env.VERSION }}
+          bhangun/coto:latest
+          bhangun/coto:${{ env.VERSION }}

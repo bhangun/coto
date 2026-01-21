@@ -1,6 +1,6 @@
 .PHONY: build clean install test lint release demo cross-compile help
 
-BINARY_NAME=pecel
+BINARY_NAME=coto
 BINARY_DIR=bin
 VERSION=$(shell git describe --tags --always --dirty)
 GO_FILES=$(shell find . -name "*.go" -type f)
@@ -12,7 +12,7 @@ YELLOW=\033[1;33m
 NC=\033[0m # No Color
 
 help:
-	@echo "$(CYAN)Pecel CLI - Build Commands$(NC)"
+	@echo "$(CYAN)Coto CLI - Build Commands$(NC)"
 	@echo ""
 	@echo "$(YELLOW)Usage:$(NC)"
 	@echo "  make [target]"
@@ -93,24 +93,24 @@ cross-compile:
 	@mkdir -p dist
 	@echo "$(YELLOW)Linux...$(NC)"
 	@mkdir -p dist
-	GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o dist/pecel-linux-amd64 ./cmd/main
-	GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -o dist/pecel-linux-arm64 ./cmd/main
-	GOOS=linux GOARCH=386 go build -ldflags="-s -w" -o dist/pecel-linux-386 ./cmd/main
+	GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o dist/coto-linux-amd64 ./cmd/main
+	GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -o dist/coto-linux-arm64 ./cmd/main
+	GOOS=linux GOARCH=386 go build -ldflags="-s -w" -o dist/coto-linux-386 ./cmd/main
 
 	@echo "$(YELLOW)macOS...$(NC)"
-	GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -o dist/pecel-darwin-amd64 ./cmd/main
-	GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -o dist/pecel-darwin-arm64 ./cmd/main
+	GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -o dist/coto-darwin-amd64 ./cmd/main
+	GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -o dist/coto-darwin-arm64 ./cmd/main
 
 	@echo "$(YELLOW)Windows...$(NC)"
-	GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o dist/pecel-windows-amd64.exe ./cmd/main
-	GOOS=windows GOARCH=arm64 go build -ldflags="-s -w" -o dist/pecel-windows-arm64.exe ./cmd/main
-	GOOS=windows GOARCH=386 go build -ldflags="-s -w" -o dist/pecel-windows-386.exe ./cmd/main
+	GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o dist/coto-windows-amd64.exe ./cmd/main
+	GOOS=windows GOARCH=arm64 go build -ldflags="-s -w" -o dist/coto-windows-arm64.exe ./cmd/main
+	GOOS=windows GOARCH=386 go build -ldflags="-s -w" -o dist/coto-windows-386.exe ./cmd/main
 	
 	@echo "$(GREEN)✓ Cross-compilation complete!$(NC)"
 
 checksums:
 	@echo "$(CYAN)Generating SHA256 checksums...$(NC)"
-	@if [ -d "dist" ]; then cd dist && find . -type f -name "pecel*" -exec sha256sum {} \; > ../checksums.txt; fi
+	@if [ -d "dist" ]; then cd dist && find . -type f -name "coto*" -exec sha256sum {} \; > ../checksums.txt; fi
 	@echo "$(GREEN)✓ Checksums generated in checksums.txt$(NC)"
 
 benchmark:
@@ -126,8 +126,8 @@ size:
 
 docker-build:
 	@echo "$(CYAN)Building Docker image...$(NC)"
-	docker build -t pecel:latest -f Dockerfile .
+	docker build -t coto:latest -f Dockerfile .
 
 docker-run:
 	@echo "$(CYAN)Running in Docker...$(NC)"
-	docker run --rm -v $(PWD):/data pecel:latest -i /data -o /data/docker-output.txt
+	docker run --rm -v $(PWD):/data coto:latest -i /data -o /data/docker-output.txt

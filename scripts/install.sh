@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# Pecel Enhanced Installation Script
+# Coto Enhanced Installation Script
 set -e
 
 VERSION="v0.1.0"
-REPO="bhangun/pecel"
+REPO="bhangun/coto"
 INSTALL_DIR="/usr/local/bin"
-BINARY_NAME="pecel"
+BINARY_NAME="coto"
 OS="$(uname -s)"
 ARCH="$(uname -m)"
 
@@ -50,7 +50,7 @@ print_error() {
 print_banner() {
     echo -e "${CYAN}"
     echo "╔══════════════════════════════════════════════════════╗"
-    echo "║          Pecel CLI Installer v0.1.0          ║"
+    echo "║          Coto CLI Installer v0.1.0          ║"
     echo "╚══════════════════════════════════════════════════════╝"
     echo -e "${NC}"
 }
@@ -67,7 +67,7 @@ check_existing() {
 
 # Download and install
 install_binary() {
-    print_info "Attempting to download pecel $VERSION for $PLATFORM/$ARCH..."
+    print_info "Attempting to download coto $VERSION for $PLATFORM/$ARCH..."
 
     DOWNLOAD_URL="https://github.com/$REPO/releases/download/$VERSION/${BINARY_NAME}-${PLATFORM}-${ARCH}"
 
@@ -99,7 +99,7 @@ install_binary() {
             exit 1
         }
 
-        cp bin/pecel "$TEMP_DIR/$BINARY_NAME"
+        cp bin/coto "$TEMP_DIR/$BINARY_NAME"
         print_success "Successfully built from source"
     else
         print_success "Successfully downloaded binary"
@@ -147,9 +147,9 @@ uninstall() {
     if [ -f "$INSTALL_DIR/$BINARY_NAME" ]; then
         print_info "Removing $INSTALL_DIR/$BINARY_NAME..."
         sudo rm -f "$INSTALL_DIR/$BINARY_NAME"
-        print_success "Pecel has been uninstalled"
+        print_success "Coto has been uninstalled"
     else
-        print_warn "Pecel is not installed"
+        print_warn "Coto is not installed"
     fi
     exit 0
 }
@@ -180,16 +180,16 @@ install_completion() {
         bash)
             COMPLETION_DIR="/etc/bash_completion.d"
             if [ -d "$COMPLETION_DIR" ]; then
-                sudo curl -sSL "https://raw.githubusercontent.com/$REPO/main/completions/bash/pecel" \
-                    -o "$COMPLETION_DIR/pecel" || true
+                sudo curl -sSL "https://raw.githubusercontent.com/$REPO/main/completions/bash/coto" \
+                    -o "$COMPLETION_DIR/coto" || true
                 print_info "Bash completion installed (may require restart)"
             fi
             ;;
         zsh)
             COMPLETION_DIR="/usr/local/share/zsh/site-functions"
             if [ -d "$COMPLETION_DIR" ]; then
-                sudo curl -sSL "https://raw.githubusercontent.com/$REPO/main/completions/zsh/_pecel" \
-                    -o "$COMPLETION_DIR/_pecel" || true
+                sudo curl -sSL "https://raw.githubusercontent.com/$REPO/main/completions/zsh/_coto" \
+                    -o "$COMPLETION_DIR/_coto" || true
                 print_info "Zsh completion installed"
             fi
             ;;
@@ -202,9 +202,9 @@ show_help() {
     echo "Usage: $0 [OPTION]"
     echo
     echo "Options:"
-    echo "  install     Install pecel (default)"
+    echo "  install     Install coto (default)"
     echo "  update      Update to latest version"
-    echo "  uninstall   Remove pecel"
+    echo "  uninstall   Remove coto"
     echo "  completion  Install shell completion"
     echo "  help        Show this help message"
     echo
