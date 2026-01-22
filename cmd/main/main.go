@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/fatih/color"
+	"github.com/bhangun/coto/cmd/extract"
 )
 
 const (
@@ -210,7 +211,45 @@ func promptSelect(prompt string, options []string, defaultValue string) string {
 	return defaultValue
 }
 
+func printMainHelp() {
+	fmt.Println("coto - Code Combiner and Extractor Tool")
+	fmt.Printf("Version: %s\n\n", version)
+	fmt.Println("Usage:")
+	fmt.Println("  coto [options]                  # Combine files (default)")
+	fmt.Println("  coto extract [options]          # Extract code blocks")
+	fmt.Println("  coto version                    # Show version")
+	fmt.Println("  coto help                       # Show this help")
+	fmt.Println("\nFor command-specific help:")
+	fmt.Println("  coto extract --help")
+	fmt.Println()
+}
+
 func main() {
+	// Check for subcommands
+	if len(os.Args) > 1 {
+		switch os.Args[1] {
+		case "extract":
+			// Run extract subcommand
+			cmd := extract.NewExtractCommand()
+			if err := cmd.Run(os.Args[2:]); err != nil {
+				fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+				os.Exit(1)
+			}
+			return
+		case "version", "-v", "--version":
+			fmt.Printf("coto v%s\n", version)
+			return
+		case "help", "-h", "--help":
+			printMainHelp()
+			return
+		}
+	}
+
+	// Default: run file combiner (backward compatibility)
+	runCombineCommand()
+}
+
+func runCombineCommand() {
 	// Define command line flags with short versions
 	inputDir := flag.String("input", ".", "Input directory path")
 	inputShort := flag.String("i", "", "Input directory path (shorthand)")

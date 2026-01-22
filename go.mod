@@ -1,4 +1,4 @@
-module github.com/bhangun/pecel
+module github.com/bhangun/coto
 
 go 1.21
 

@@ -1,0 +1,345 @@
+package main
+
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+	"plugin"
+	"strings"
+	"sync"
+)
+
+// PluginLoader handles dynamic loading of plugins
+type PluginLoader struct {
+	registry *PluginRegistry
+	plugins  map[string]string // name -> path
+	mutex    sync.RWMutex
+}
+
+// NewPluginLoader creates a new plugin loader
+func NewPluginLoader(registry *PluginRegistry) *PluginLoader {
+	return &PluginLoader{
+		registry: registry,
+		plugins:  make(map[string]string),
+	}
+}
+
+// LoadPlugin loads a plugin from a .so file
+func (l *PluginLoader) LoadPlugin(pluginPath string) error {
+	l.mutex.Lock()
+	defer l.mutex.Unlock()
+
+	// Check if plugin already loaded
+	for _, path := range l.plugins {
+		if path == pluginPath {
+			return fmt.Errorf("plugin already loaded: %s", pluginPath)
+		}
+	}
+
+	// Open the plugin
+	p, err := plugin.Open(pluginPath)
+	if err != nil {
+		return fmt.Errorf("failed to open plugin %s: %w", pluginPath, err)
+	}
+
+	// Look for the plugin symbol
+	sym, err := p.Lookup("Plugin")
+	if err != nil {
+		return fmt.Errorf("plugin %s doesn't export 'Plugin' symbol: %w", pluginPath, err)
+	}
+
+	// Cast to ExtractorPlugin
+	extractor, ok := sym.(ExtractorPlugin)
+	if !ok {
+		return fmt.Errorf("plugin %s doesn't implement ExtractorPlugin interface", pluginPath)
+	}
+
+	// Register the plugin
+	if err := l.registry.Register(extractor); err != nil {
+		return fmt.Errorf("failed to register plugin %s: %w", pluginPath, err)
+	}
+
+	// Store plugin info
+	pluginName := extractor.Name()
+	l.plugins[pluginName] = pluginPath
+
+	return nil
+}
+
+// LoadPluginsFromDir loads all plugins from a directory
+func (l *PluginLoader) LoadPluginsFromDir(dirPath string) ([]string, error) {
+	var loaded []string
+
+	files, err := os.ReadDir(dirPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read plugin directory %s: %w", dirPath, err)
+	}
+
+	for _, file := range files {
+		if file.IsDir() {
+			continue
+		}
+
+		if filepath.Ext(file.Name()) == ".so" {
+			pluginPath := filepath.Join(dirPath, file.Name())
+			if err := l.LoadPlugin(pluginPath); err != nil {
+				fmt.Printf("Warning: Failed to load plugin %s: %v\n", pluginPath, err)
+				continue
+			}
+			loaded = append(loaded, file.Name())
+		}
+	}
+
+	return loaded, nil
+}
+
+// LoadPluginByLanguage loads a specific plugin by language name from a directory
+func (l *PluginLoader) LoadPluginByLanguage(dirPath, language string) error {
+	pluginFileName := fmt.Sprintf("%s_plugin.so", strings.ToLower(language))
+	pluginPath := filepath.Join(dirPath, pluginFileName)
+
+	return l.LoadPlugin(pluginPath)
+}
+
+// UnloadPlugin unloads a plugin
+func (l *PluginLoader) UnloadPlugin(pluginName string) error {
+	l.mutex.Lock()
+	defer l.mutex.Unlock()
+
+	path, exists := l.plugins[pluginName]
+	if !exists {
+		return fmt.Errorf("plugin not loaded: %s", pluginName)
+	}
+
+	// Note: Go plugins cannot be truly unloaded.
+	// We just remove it from our registry.
+	delete(l.plugins, pluginName)
+
+	// Cleanup the plugin if possible
+	if plugin, exists := l.registry.GetPlugin(pluginName); exists {
+		plugin.Cleanup()
+	}
+
+	// Remove from registry
+	l.registry.Unregister(pluginName)
+
+	return nil
+}
+
+// ListLoadedPlugins returns list of loaded plugins
+func (l *PluginLoader) ListLoadedPlugins() []string {
+	l.mutex.RLock()
+	defer l.mutex.RUnlock()
+
+	plugins := make([]string, 0, len(l.plugins))
+	for name := range l.plugins {
+		plugins = append(plugins, name)
+	}
+
+	return plugins
+}
+
+// ValidatePlugin checks if a plugin file is valid
+func (l *PluginLoader) ValidatePlugin(pluginPath string) error {
+	// Open the plugin
+	p, err := plugin.Open(pluginPath)
+	if err != nil {
+		return fmt.Errorf("failed to open plugin %s: %w", pluginPath, err)
+	}
+
+	// Look for the plugin symbol
+	sym, err := p.Lookup("Plugin")
+	if err != nil {
+		return fmt.Errorf("plugin %s doesn't export 'Plugin' symbol: %w", pluginPath, err)
+	}
+
+	// Cast to ExtractorPlugin
+	_, ok := sym.(ExtractorPlugin)
+	if !ok {
+		return fmt.Errorf("plugin %s doesn't implement ExtractorPlugin interface", pluginPath)
+	}
+
+	return nil
+}
+
+// ReloadPlugin reloads a plugin from file
+func (l *PluginLoader) ReloadPlugin(pluginName string, pluginPath string) error {
+	// Unload the existing plugin
+	if err := l.UnloadPlugin(pluginName); err != nil {
+		return fmt.Errorf("failed to unload plugin: %w", err)
+	}
+
+	// Load the plugin again
+	return l.LoadPlugin(pluginPath)
+}
+
+// PluginBuilder helps create and compile plugins
+type PluginBuilder struct {
+	pluginDir string
+}
+
+// NewPluginBuilder creates a new plugin builder
+func NewPluginBuilder(pluginDir string) *PluginBuilder {
+	return &PluginBuilder{
+		pluginDir: pluginDir,
+	}
+}
+
+// BuildPluginTemplate generates a template for a new plugin
+func (b *PluginBuilder) BuildPluginTemplate(language, author string) (string, error) {
+	// This function generates plugin templates but is currently disabled due to template complexity
+	return "", fmt.Errorf("plugin template generation is temporarily disabled")
+}
+
+// BuildAdvancedPluginTemplate generates a more comprehensive template for a new plugin
+func (b *PluginBuilder) BuildAdvancedPluginTemplate(language, author string) (string, error) {
+	// This function generates advanced plugin templates but is currently disabled due to template complexity
+	return "", fmt.Errorf("advanced plugin template generation is temporarily disabled")
+}
+
+// BuildPluginProject creates a complete plugin project structure
+//func (b *PluginBuilder) BuildPluginProject(language, author string) error {
+//	// Create plugin directory
+//	pluginDir := filepath.Join(b.pluginDir, strings.ToLower(language)+"_plugin")
+//	if err := os.MkdirAll(pluginDir, 0755); err != nil {
+//		return fmt.Errorf("failed to create plugin directory: %w", err)
+//	}
+//
+//	// Create main plugin file
+//	mainFile := filepath.Join(pluginDir, "main.go")
+//	mainContent := fmt.Sprintf(`package main
+//
+//import (
+//	"fmt"
+//	"regexp"
+//	"strings"
+//)
+//
+//// %sExtractor implements the ExtractorPlugin interface
+//type %sExtractor struct {
+//	patterns map[string]*regexp.Regexp
+//}
+
+// New%sExtractor creates a new instance
+func New%sExtractor() *%sExtractor {
+	return &%sExtractor{
+		patterns: make(map[string]*regexp.Regexp),
+	}
+}
+
+func (e *%%sExtractor) Name() string {
+	return "%%s"
+}
+
+func (e *%%sExtractor) Extensions() []string {
+	return []string{".%%s"}
+}
+
+func (e *%%sExtractor) Initialize() error {
+	// Define your extraction patterns here
+	patterns := map[string]string{
+		"function": ` + "`func\\s+([A-Za-z_][A-Za-z0-9_]*)\\s*\\([^)]*\\)`" + `,
+		"class":    ` + "`type\\s+([A-Za-z_][A-Za-z0-9_]*)\\s+struct\\s*\\{`" + `,
+		"comment":  ` + "`//.*`" + `,
+	}
+
+	for name, pattern := range patterns {
+		re, err := regexp.Compile(pattern)
+		if err != nil {
+			return fmt.Errorf("failed to compile pattern %s: %w", name, err)
+		}
+		e.patterns[name] = re
+	}
+	return nil
+}
+
+func (e *%sExtractor) Cleanup() {
+	e.patterns = nil
+}
+
+func (e *%sExtractor) ShouldProcess(filename string) bool {
+	ext := strings.ToLower(filepath.Ext(filename))
+	for _, supportedExt := range e.Extensions() {
+		if ext == supportedExt {
+			return true
+		}
+	}
+	return false
+}
+
+func (e *%sExtractor) Extract(content string) []CodeBlock {
+	var blocks []CodeBlock
+
+	// Extract different types of code blocks
+	for patternName, re := range e.patterns {
+		matches := re.FindAllString(content, -1)
+		for i, match := range matches {
+			if match != "" {
+				block := CodeBlock{
+					Content:  match,
+					Type:     patternName,
+					Filename: fmt.Sprintf("%%s_%%d.%s", patternName, i+1),
+					Language: "%s",
+				}
+				blocks = append(blocks, block)
+			}
+		}
+	}
+
+	return blocks
+}
+
+// Export plugin variable
+var Plugin ExtractorPlugin = New%sExtractor()
+`, language, language, language, language, language, language,
+		language, strings.ToLower(language), language,
+		language, language, language, language, language, language)
+
+	if err := os.WriteFile(mainFile, []byte(mainContent), 0644); err != nil {
+		return fmt.Errorf("failed to write main plugin file: %w", err)
+	}
+
+	// Create go.mod file
+	goModFile := filepath.Join(pluginDir, "go.mod")
+	goModContent := fmt.Sprintf(`module %s_plugin
+
+go 1.19
+
+require (
+	github.com/bhangun/coto v0.1.0
+)
+
+replace github.com/bhangun/coto => ../..
+`, strings.ToLower(language))
+
+	if err := os.WriteFile(goModFile, []byte(goModContent), 0644); err != nil {
+		return fmt.Errorf("failed to write go.mod file: %w", err)
+	}
+
+	// Create README.md
+	readmeFile := filepath.Join(pluginDir, "README.md")
+	readmeContent := fmt.Sprintf(`# %s Plugin
+
+This plugin extracts %s code blocks for the Coto extractor.
+
+## Building
+
+To build this plugin:
+
+\`\`\`bash
+go build -buildmode=plugin -o %s_plugin.so .
+\`\`\`
+
+Then use it with Coto:
+
+\`\`\`bash
+coto extract -input files/ -plugin-dir . -language %s
+\`\`\`
+`, language, language, strings.ToLower(language), strings.ToLower(language))
+
+	if err := os.WriteFile(readmeFile, []byte(readmeContent), 0644); err != nil {
+		return fmt.Errorf("failed to write README file: %w", err)
+	}
+
+	return nil
+}
