@@ -1168,9 +1168,10 @@ func (e *JavaScriptExtractor) extractStyledComponent(content, componentName stri
 	}
 	
 	return fmt.Sprintf(`const %s = styled.div\`
+ + "`" + `
   color: #333;
   padding: 1rem;
-\`;`, componentName)
+` + "`" + `;`, componentName)
 }
 
 // extractJSONObject extracts JSON object from content
