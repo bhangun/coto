@@ -35,39 +35,37 @@ release:
 distributions:
   coto:
     type: BINARY
-    executable:
-      name: coto
     artifacts:
       - path: ./dist/linux-amd64/coto
         platform: 'linux-x86_64'
         extraProperties:
           packager: brew,chocolatey
-        transform: './dist/linux-amd64/coto -> {{distributionName}}'
+        transform: '{{distributionName}}-linux-amd64'
       - path: ./dist/linux-arm64/coto
         platform: 'linux-aarch_64'
         extraProperties:
           packager: brew,chocolatey
-        transform: './dist/linux-arm64/coto -> {{distributionName}}'
+        transform: '{{distributionName}}-linux-arm64'
       - path: ./dist/darwin-amd64/coto
         platform: 'osx-x86_64'
         extraProperties:
           packager: brew,chocolatey
-        transform: './dist/darwin-amd64/coto -> {{distributionName}}'
+        transform: '{{distributionName}}-darwin-amd64'
       - path: ./dist/darwin-arm64/coto
         platform: 'osx-aarch_64'
         extraProperties:
           packager: brew,chocolatey
-        transform: './dist/darwin-arm64/coto -> {{distributionName}}'
+        transform: '{{distributionName}}-darwin-arm64'
       - path: ./dist/windows-amd64/coto.exe
         platform: 'windows-x86_64'
         extraProperties:
           packager: brew,chocolatey
-        transform: './dist/windows-amd64/coto.exe -> {{distributionName}}.exe'
+        transform: '{{distributionName}}-windows-amd64.exe'
       - path: ./dist/windows-arm64/coto.exe
         platform: 'windows-aarch_64'
         extraProperties:
           packager: brew,chocolatey
-        transform: './dist/windows-arm64/coto.exe -> {{distributionName}}.exe'
+        transform: '{{distributionName}}-windows-arm64.exe'
 
 signing:
   active: NEVER

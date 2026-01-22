@@ -74,11 +74,12 @@ install_binary() {
     trap "rm -rf $TEMP_DIR" EXIT
 
     # Try multiple possible URL patterns for the binary
+    # Updated to match the jreleaser.yml configuration (prioritizing direct binaries)
     DOWNLOAD_URLS=(
-        "https://github.com/$REPO/releases/download/$VERSION/${BINARY_NAME}-${PLATFORM}-${ARCH}.tar.gz"
-        "https://github.com/$REPO/releases/download/$VERSION/${BINARY_NAME}_${PLATFORM}_${ARCH}.tar.gz"
-        "https://github.com/$REPO/releases/download/$VERSION/${BINARY_NAME}-${PLATFORM}-${ARCH}"
-        "https://github.com/$REPO/releases/download/$VERSION/${BINARY_NAME}_${PLATFORM}_${ARCH}"
+        "https://github.com/$REPO/releases/download/$VERSION/${BINARY_NAME}-${PLATFORM}-${ARCH}"  # Direct binary: coto-darwin-arm64
+        "https://github.com/$REPO/releases/download/$VERSION/${BINARY_NAME}_${PLATFORM}_${ARCH}"  # Alternative: coto_darwin_arm64
+        "https://github.com/$REPO/releases/download/$VERSION/${BINARY_NAME}-${PLATFORM}-${ARCH}.tar.gz"  # Archive: coto-darwin-arm64.tar.gz
+        "https://github.com/$REPO/releases/download/$VERSION/${BINARY_NAME}_${PLATFORM}_${ARCH}.tar.gz"  # Alternative archive: coto_darwin_arm64.tar.gz
     )
 
     DOWNLOAD_SUCCESS=false
