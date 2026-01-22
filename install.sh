@@ -69,15 +69,83 @@ check_existing() {
 install_binary() {
     print_info "Attempting to download coto $VERSION for $PLATFORM/$ARCH..."
 
-    DOWNLOAD_URL="https://github.com/$REPO/releases/download/$VERSION/${BINARY_NAME}-${PLATFORM}-${ARCH}"
-
     # Create temp directory
     TEMP_DIR=$(mktemp -d)
     trap "rm -rf $TEMP_DIR" EXIT
 
-    # Try to download binary from GitHub release
-    if ! curl -sSL -o "$TEMP_DIR/$BINARY_NAME" "$DOWNLOAD_URL"; then
-        print_warn "Failed to download binary from $DOWNLOAD_URL"
+    # Try multiple possible URL patterns for the binary
+    DOWNLOAD_URLS=(
+        "https://github.com/$REPO/releases/download/$VERSION/${BINARY_NAME}-${PLATFORM}-${ARCH}.tar.gz"
+        "https://github.com/$REPO/releases/download/$VERSION/${BINARY_NAME}_${PLATFORM}_${ARCH}.tar.gz"
+        "https://github.com/$REPO/releases/download/$VERSION/${BINARY_NAME}-${PLATFORM}-${ARCH}"
+        "https://github.com/$REPO/releases/download/$VERSION/${BINARY_NAME}_${PLATFORM}_${ARCH}"
+    )
+
+    DOWNLOAD_SUCCESS=false
+
+    for url in "${DOWNLOAD_URLS[@]}"; do
+        print_info "Trying download URL: $url"
+
+        # Download the file and check if it's a valid response
+        if curl -sSL -o "$TEMP_DIR/downloaded_file" "$url" 2>/dev/null; then
+            # Check if the downloaded file is actually an HTML/text error page
+            if file "$TEMP_DIR/downloaded_file" | grep -q "HTML\|ASCII text"; then
+                # Check if it contains typical error indicators
+                if grep -q -i "not found\|error\|404\|page not found\|does not exist" "$TEMP_DIR/downloaded_file"; then
+                    print_warn "Downloaded file from $url is an error page, skipping..."
+                    continue
+                fi
+            fi
+
+            # Check if the file is empty
+            if [ ! -s "$TEMP_DIR/downloaded_file" ]; then
+                print_warn "Downloaded file from $url is empty, skipping..."
+                continue
+            fi
+
+            DOWNLOAD_URL="$url"
+            print_success "Successfully downloaded from $url"
+
+            # Check if it's an archive or binary
+            if file "$TEMP_DIR/downloaded_file" | grep -q "gzip compressed\|tar archive"; then
+                # It's a tar.gz file, extract it
+                mv "$TEMP_DIR/downloaded_file" "$TEMP_DIR/archive.tar.gz"
+                tar -xzf "$TEMP_DIR/archive.tar.gz" -C "$TEMP_DIR"
+
+                # Find the extracted binary (it might be in a subdirectory)
+                if [ -f "$TEMP_DIR/$BINARY_NAME" ]; then
+                    # Binary is at root level
+                    :
+                elif [ -f "$TEMP_DIR/$BINARY_NAME-$PLATFORM-$ARCH/$BINARY_NAME" ]; then
+                    # Binary is in a subdirectory
+                    mv "$TEMP_DIR/$BINARY_NAME-$PLATFORM-$ARCH/$BINARY_NAME" "$TEMP_DIR/$BINARY_NAME"
+                elif [ -f "$TEMP_DIR/$BINARY_NAME-$VERSION/$BINARY_NAME" ]; then
+                    # Binary is in a version subdirectory
+                    mv "$TEMP_DIR/$BINARY_NAME-$VERSION/$BINARY_NAME" "$TEMP_DIR/$BINARY_NAME"
+                else
+                    # Look for the binary in any subdirectory
+                    BINARY_PATH=$(find "$TEMP_DIR" -name "$BINARY_NAME" -type f -executable | head -n 1)
+                    if [ -n "$BINARY_PATH" ]; then
+                        cp "$BINARY_PATH" "$TEMP_DIR/$BINARY_NAME"
+                    else
+                        print_error "Could not find binary in downloaded archive from $url"
+                        continue
+                    fi
+                fi
+            else
+                # It's a binary file, move it to the expected name
+                mv "$TEMP_DIR/downloaded_file" "$TEMP_DIR/$BINARY_NAME"
+            fi
+
+            DOWNLOAD_SUCCESS=true
+            break
+        else
+            print_warn "Failed to download from $url"
+        fi
+    done
+
+    if [ "$DOWNLOAD_SUCCESS" = false ]; then
+        print_warn "All download attempts failed"
         print_info "Attempting to build from source..."
 
         # Check if Go is installed
@@ -101,8 +169,6 @@ install_binary() {
 
         cp bin/coto "$TEMP_DIR/$BINARY_NAME"
         print_success "Successfully built from source"
-    else
-        print_success "Successfully downloaded binary"
     fi
 
     # Make binary executable
