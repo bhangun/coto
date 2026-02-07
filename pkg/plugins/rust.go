@@ -1,9 +1,11 @@
-package main
+package plugins
 
 import (
 	"fmt"
 	"regexp"
 	"strings"
+	
+	"github.com/bhangun/coto/pkg/extractor"
 )
 
 // RustExtractor extracts Rust code
@@ -56,8 +58,8 @@ func (e *RustExtractor) ShouldProcess(filename string) bool {
 		strings.HasSuffix(filename, "Cargo.toml")
 }
 
-func (e *RustExtractor) Extract(content string) []CodeBlock {
-	var blocks []CodeBlock
+func (e *RustExtractor) Extract(content string) []extractor.CodeBlock {
+	var blocks []extractor.CodeBlock
 
 	// Extract use statements
 	var imports []string
@@ -71,7 +73,7 @@ func (e *RustExtractor) Extract(content string) []CodeBlock {
 	for _, match := range e.patterns["struct"].FindAllStringSubmatch(content, -1) {
 		if len(match) > 1 {
 			structName := match[1]
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  e.extractStruct(content, structName),
 				Type:     "struct",
 				Package:  "",
@@ -86,7 +88,7 @@ func (e *RustExtractor) Extract(content string) []CodeBlock {
 	for _, match := range e.patterns["enum"].FindAllStringSubmatch(content, -1) {
 		if len(match) > 1 {
 			enumName := match[1]
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  e.extractEnum(content, enumName),
 				Type:     "enum",
 				Package:  "",
@@ -101,7 +103,7 @@ func (e *RustExtractor) Extract(content string) []CodeBlock {
 	for _, match := range e.patterns["function"].FindAllStringSubmatch(content, -1) {
 		if len(match) > 1 {
 			funcName := match[1]
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  e.extractFunction(content, funcName),
 				Type:     "function",
 				Package:  "",
@@ -115,7 +117,7 @@ func (e *RustExtractor) Extract(content string) []CodeBlock {
 	// Extract Cargo.toml if present
 	if strings.Contains(content, "[package]") {
 		if cargo := e.extractCargoToml(content); cargo != "" {
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  cargo,
 				Type:     "cargo_toml",
 				Package:  "",
@@ -173,4 +175,4 @@ func (e *RustExtractor) extractCargoToml(content string) string {
 }
 
 // Export the plugin
-var Plugin ExtractorPlugin = NewRustExtractor()
+var Plugin extractor.ExtractorPlugin = NewRustExtractor()

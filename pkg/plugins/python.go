@@ -1,11 +1,13 @@
 // python_extractor.go - Python Code Extractor
-package main
+package plugins
 
 import (
 	"fmt"
 	"path/filepath"
 	"regexp"
 	"strings"
+	
+	"github.com/bhangun/coto/pkg/extractor"
 )
 
 // PythonExtractor extracts Python code
@@ -141,8 +143,8 @@ func (e *PythonExtractor) ShouldProcess(filename string) bool {
 }
 
 // Extract extracts Python code blocks from content
-func (e *PythonExtractor) Extract(content string) []CodeBlock {
-	var blocks []CodeBlock
+func (e *PythonExtractor) Extract(content string) []extractor.CodeBlock {
+	var blocks []extractor.CodeBlock
 
 	// Extract module-level imports
 	imports := e.extractImports(content)
@@ -225,8 +227,8 @@ func (e *PythonExtractor) extractImports(content string) []string {
 }
 
 // extractClasses extracts Python classes
-func (e *PythonExtractor) extractClasses(content string, imports []string) []CodeBlock {
-	var blocks []CodeBlock
+func (e *PythonExtractor) extractClasses(content string, imports []string) []extractor.CodeBlock {
+	var blocks []extractor.CodeBlock
 
 	// Extract regular classes
 	for _, match := range e.patterns["class"].FindAllStringSubmatch(content, -1) {
@@ -242,7 +244,7 @@ func (e *PythonExtractor) extractClasses(content string, imports []string) []Cod
 			// Check for decorators before class
 			decorators := e.extractClassDecorators(content, className)
 
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:     classContent,
 				Type:        "class",
 				Package:     e.extractModuleName(content),
@@ -260,7 +262,7 @@ func (e *PythonExtractor) extractClasses(content string, imports []string) []Cod
 			className := match[1]
 			classContent := e.extractDataclassBody(content, className)
 
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:     classContent,
 				Type:        "dataclass",
 				Package:     e.extractModuleName(content),
@@ -278,7 +280,7 @@ func (e *PythonExtractor) extractClasses(content string, imports []string) []Cod
 			className := match[1]
 			modelContent := e.extractPydanticModel(content, className)
 
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:     modelContent,
 				Type:        "pydantic_model",
 				Package:     e.extractModuleName(content),
@@ -296,7 +298,7 @@ func (e *PythonExtractor) extractClasses(content string, imports []string) []Cod
 			className := match[1]
 			modelContent := e.extractDjangoModel(content, className)
 
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:     modelContent,
 				Type:        "django_model",
 				Package:     e.extractModuleName(content),
@@ -312,8 +314,8 @@ func (e *PythonExtractor) extractClasses(content string, imports []string) []Cod
 }
 
 // extractFunctions extracts Python functions
-func (e *PythonExtractor) extractFunctions(content string, imports []string) []CodeBlock {
-	var blocks []CodeBlock
+func (e *PythonExtractor) extractFunctions(content string, imports []string) []extractor.CodeBlock {
+	var blocks []extractor.CodeBlock
 
 	// Extract module-level functions
 	for _, match := range e.patterns["function"].FindAllStringSubmatch(content, -1) {
@@ -337,7 +339,7 @@ func (e *PythonExtractor) extractFunctions(content string, imports []string) []C
 
 			funcContent := e.extractFunctionBody(content, funcName, params, returnType, false)
 
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  funcContent,
 				Type:     "function",
 				Package:  e.extractModuleName(content),
@@ -352,8 +354,8 @@ func (e *PythonExtractor) extractFunctions(content string, imports []string) []C
 }
 
 // extractMethods extracts class methods
-func (e *PythonExtractor) extractMethods(content string, imports []string) []CodeBlock {
-	var blocks []CodeBlock
+func (e *PythonExtractor) extractMethods(content string, imports []string) []extractor.CodeBlock {
+	var blocks []extractor.CodeBlock
 
 	// Extract __init__ methods
 	for _, match := range e.patterns["init_method"].FindAllStringSubmatch(content, -1) {
@@ -361,7 +363,7 @@ func (e *PythonExtractor) extractMethods(content string, imports []string) []Cod
 			params := match[1]
 			funcContent := e.extractInitMethodBody(content, params)
 
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  funcContent,
 				Type:     "__init__",
 				Package:  e.extractModuleName(content),
@@ -378,7 +380,7 @@ func (e *PythonExtractor) extractMethods(content string, imports []string) []Cod
 			methodName := match[1]
 			methodContent := e.extractClassMethodBody(content, methodName)
 
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:     methodContent,
 				Type:        "classmethod",
 				Package:     e.extractModuleName(content),
@@ -396,7 +398,7 @@ func (e *PythonExtractor) extractMethods(content string, imports []string) []Cod
 			methodName := match[1]
 			methodContent := e.extractStaticMethodBody(content, methodName)
 
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:     methodContent,
 				Type:        "staticmethod",
 				Package:     e.extractModuleName(content),
@@ -412,8 +414,8 @@ func (e *PythonExtractor) extractMethods(content string, imports []string) []Cod
 }
 
 // extractDecoratedFunctions extracts functions with decorators
-func (e *PythonExtractor) extractDecoratedFunctions(content string, imports []string) []CodeBlock {
-	var blocks []CodeBlock
+func (e *PythonExtractor) extractDecoratedFunctions(content string, imports []string) []extractor.CodeBlock {
+	var blocks []extractor.CodeBlock
 
 	// Find lines with decorators followed by function definitions
 	lines := strings.Split(content, "\n")
@@ -434,7 +436,7 @@ func (e *PythonExtractor) extractDecoratedFunctions(content string, imports []st
 								decorator = decorator[:idx]
 							}
 
-							blocks = append(blocks, CodeBlock{
+							blocks = append(blocks, extractor.CodeBlock{
 								Content:     funcContent,
 								Type:        "decorated_function",
 								Package:     e.extractModuleName(content),
@@ -457,7 +459,7 @@ func (e *PythonExtractor) extractDecoratedFunctions(content string, imports []st
 			methodName := match[1]
 			methodContent := e.extractPropertyMethod(content, methodName)
 
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:     methodContent,
 				Type:        "property",
 				Package:     e.extractModuleName(content),
@@ -473,8 +475,8 @@ func (e *PythonExtractor) extractDecoratedFunctions(content string, imports []st
 }
 
 // extractAsyncFunctions extracts async functions
-func (e *PythonExtractor) extractAsyncFunctions(content string, imports []string) []CodeBlock {
-	var blocks []CodeBlock
+func (e *PythonExtractor) extractAsyncFunctions(content string, imports []string) []extractor.CodeBlock {
+	var blocks []extractor.CodeBlock
 
 	// Extract async functions
 	for _, match := range e.patterns["async_function"].FindAllStringSubmatch(content, -1) {
@@ -492,7 +494,7 @@ func (e *PythonExtractor) extractAsyncFunctions(content string, imports []string
 
 			funcContent := e.extractFunctionBody(content, funcName, params, returnType, true)
 
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  funcContent,
 				Type:     "async_function",
 				Package:  e.extractModuleName(content),
@@ -508,16 +510,16 @@ func (e *PythonExtractor) extractAsyncFunctions(content string, imports []string
 }
 
 // extractTestCases extracts test functions and classes
-func (e *PythonExtractor) extractTestCases(content string, imports []string) []CodeBlock {
-	var blocks []CodeBlock
+func (e *PythonExtractor) extractTestCases(content string, imports []string) []extractor.CodeBlock {
+	var blocks []extractor.CodeBlock
 
 	// Extract test classes
 	for _, match := range e.patterns["test_class"].FindAllStringSubmatch(content, -1) {
 		if len(match) > 1 {
 			className := match[1]
-			classContent := e.extractTestClassBody(content, className)
+			classContent := e.extractClassBody(content, className, "unittest.TestCase")
 
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  classContent,
 				Type:     "test_class",
 				Package:  e.extractModuleName(content),
@@ -534,7 +536,7 @@ func (e *PythonExtractor) extractTestCases(content string, imports []string) []C
 			funcName := match[1]
 			funcContent := e.extractTestFunctionBody(content, funcName)
 
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  funcContent,
 				Type:     "test_function",
 				Package:  e.extractModuleName(content),
@@ -549,7 +551,7 @@ func (e *PythonExtractor) extractTestCases(content string, imports []string) []C
 	if e.patterns["pytest_fixture"].MatchString(content) {
 		fixtureContent := e.extractPytestFixtures(content)
 		if fixtureContent != "" {
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  fixtureContent,
 				Type:     "pytest_fixture",
 				Package:  e.extractModuleName(content),
@@ -564,8 +566,8 @@ func (e *PythonExtractor) extractTestCases(content string, imports []string) []C
 }
 
 // extractRequirements extracts requirements.txt
-func (e *PythonExtractor) extractRequirements(content string) []CodeBlock {
-	var blocks []CodeBlock
+func (e *PythonExtractor) extractRequirements(content string) []extractor.CodeBlock {
+	var blocks []extractor.CodeBlock
 
 	// Check if this looks like requirements.txt
 	if strings.Contains(content, "requirements") ||
@@ -589,7 +591,7 @@ func (e *PythonExtractor) extractRequirements(content string) []CodeBlock {
 
 		if len(requirements) > 0 {
 			reqContent := strings.Join(requirements, "\n")
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  reqContent,
 				Type:     "requirements",
 				Package:  "",
@@ -603,14 +605,14 @@ func (e *PythonExtractor) extractRequirements(content string) []CodeBlock {
 }
 
 // extractSetupPy extracts setup.py
-func (e *PythonExtractor) extractSetupPy(content string) []CodeBlock {
-	var blocks []CodeBlock
+func (e *PythonExtractor) extractSetupPy(content string) []extractor.CodeBlock {
+	var blocks []extractor.CodeBlock
 
 	if e.patterns["setup_py"].MatchString(content) {
 		setupContent := e.extractSetupContent(content)
 
 		if setupContent != "" {
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  setupContent,
 				Type:     "setup_py",
 				Package:  "",
@@ -625,8 +627,8 @@ func (e *PythonExtractor) extractSetupPy(content string) []CodeBlock {
 }
 
 // extractPyprojectToml extracts pyproject.toml
-func (e *PythonExtractor) extractPyprojectToml(content string) []CodeBlock {
-	var blocks []CodeBlock
+func (e *PythonExtractor) extractPyprojectToml(content string) []extractor.CodeBlock {
+	var blocks []extractor.CodeBlock
 
 	if e.patterns["pyproject_toml"].MatchString(content) {
 		// Extract TOML sections
@@ -634,7 +636,7 @@ func (e *PythonExtractor) extractPyprojectToml(content string) []CodeBlock {
 
 		if len(sections) > 0 {
 			tomlContent := strings.Join(sections, "\n\n")
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  tomlContent,
 				Type:     "pyproject_toml",
 				Package:  "",
@@ -648,8 +650,8 @@ func (e *PythonExtractor) extractPyprojectToml(content string) []CodeBlock {
 }
 
 // extractConfigFiles extracts other config files
-func (e *PythonExtractor) extractConfigFiles(content string) []CodeBlock {
-	var blocks []CodeBlock
+func (e *PythonExtractor) extractConfigFiles(content string) []extractor.CodeBlock {
+	var blocks []extractor.CodeBlock
 
 	// Extract setup.cfg
 	if e.patterns["setup_cfg"].MatchString(content) {
@@ -657,7 +659,7 @@ func (e *PythonExtractor) extractConfigFiles(content string) []CodeBlock {
 
 		if len(cfgSections) > 0 {
 			cfgContent := strings.Join(cfgSections, "\n\n")
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  cfgContent,
 				Type:     "setup_cfg",
 				Package:  "",
@@ -671,7 +673,7 @@ func (e *PythonExtractor) extractConfigFiles(content string) []CodeBlock {
 	if strings.Contains(content, "[tox]") {
 		toxContent := e.extractToxIni(content)
 		if toxContent != "" {
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  toxContent,
 				Type:     "tox_ini",
 				Package:  "",
@@ -685,8 +687,8 @@ func (e *PythonExtractor) extractConfigFiles(content string) []CodeBlock {
 }
 
 // extractWebFrameworkCode extracts web framework specific code
-func (e *PythonExtractor) extractWebFrameworkCode(content string, imports []string) []CodeBlock {
-	var blocks []CodeBlock
+func (e *PythonExtractor) extractWebFrameworkCode(content string, imports []string) []extractor.CodeBlock {
+	var blocks []extractor.CodeBlock
 
 	// Extract Flask routes
 	for _, match := range e.patterns["flask_route"].FindAllStringSubmatch(content, -1) {
@@ -694,7 +696,7 @@ func (e *PythonExtractor) extractWebFrameworkCode(content string, imports []stri
 			routePath := match[1]
 			routeContent := e.extractFlaskRoute(content, routePath)
 
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  routeContent,
 				Type:     "flask_route",
 				Package:  e.extractModuleName(content),
@@ -711,7 +713,7 @@ func (e *PythonExtractor) extractWebFrameworkCode(content string, imports []stri
 			routePath := match[1]
 			routeContent := e.extractFastAPIRoute(content, routePath)
 
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  routeContent,
 				Type:     "fastapi_route",
 				Package:  e.extractModuleName(content),
@@ -728,7 +730,7 @@ func (e *PythonExtractor) extractWebFrameworkCode(content string, imports []stri
 			viewName := match[1]
 			viewContent := e.extractDjangoView(content, viewName)
 
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  viewContent,
 				Type:     "django_view",
 				Package:  e.extractModuleName(content),
@@ -743,8 +745,8 @@ func (e *PythonExtractor) extractWebFrameworkCode(content string, imports []stri
 }
 
 // extractModule extracts entire module if no specific blocks found
-func (e *PythonExtractor) extractModule(content string, imports []string) []CodeBlock {
-	var blocks []CodeBlock
+func (e *PythonExtractor) extractModule(content string, imports []string) []extractor.CodeBlock {
+	var blocks []extractor.CodeBlock
 
 	moduleName := e.extractModuleName(content)
 
@@ -763,7 +765,7 @@ func (e *PythonExtractor) extractModule(content string, imports []string) []Code
 	// Create module with imports
 	moduleContent := shebang + encoding + e.reconstructImports(imports) + "\n\n" + content
 
-	blocks = append(blocks, CodeBlock{
+	blocks = append(blocks, extractor.CodeBlock{
 		Content:  moduleContent,
 		Type:     "module",
 		Package:  moduleName,

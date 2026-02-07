@@ -1,11 +1,13 @@
 // go_extractor.go - Go (Golang) Code Extractor
-package main
+package plugins
 
 import (
 	"fmt"
 	"path/filepath"
 	"regexp"
 	"strings"
+	
+	"github.com/bhangun/coto/pkg/extractor"
 )
 
 // GoExtractor extracts Go (Golang) code
@@ -216,8 +218,8 @@ func (e *GoExtractor) ShouldProcess(filename string) bool {
 }
 
 // Extract extracts Go code blocks from content
-func (e *GoExtractor) Extract(content string) []CodeBlock {
-	var blocks []CodeBlock
+func (e *GoExtractor) Extract(content string) []extractor.CodeBlock {
+	var blocks []extractor.CodeBlock
 
 	// Extract package name
 	packageName := e.extractPackageName(content)
@@ -300,8 +302,8 @@ func (e *GoExtractor) extractImports(content string) []string {
 }
 
 // extractStructs extracts Go structs
-func (e *GoExtractor) extractStructs(content, packageName string, imports []string) []CodeBlock {
-	var blocks []CodeBlock
+func (e *GoExtractor) extractStructs(content, packageName string, imports []string) []extractor.CodeBlock {
+	var blocks []extractor.CodeBlock
 
 	for _, match := range e.patterns["struct"].FindAllStringSubmatch(content, -1) {
 		if len(match) > 1 {
@@ -314,7 +316,7 @@ func (e *GoExtractor) extractStructs(content, packageName string, imports []stri
 			// Extract tags
 			tags := e.extractTags(structContent)
 
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:     structContent,
 				Type:        "struct",
 				Package:     packageName,
@@ -332,7 +334,7 @@ func (e *GoExtractor) extractStructs(content, packageName string, imports []stri
 			modelName := match[1]
 			modelContent := e.extractGormModel(content, modelName)
 
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:     modelContent,
 				Type:        "gorm_model",
 				Package:     packageName,
@@ -348,8 +350,8 @@ func (e *GoExtractor) extractStructs(content, packageName string, imports []stri
 }
 
 // extractInterfaces extracts Go interfaces
-func (e *GoExtractor) extractInterfaces(content, packageName string, imports []string) []CodeBlock {
-	var blocks []CodeBlock
+func (e *GoExtractor) extractInterfaces(content, packageName string, imports []string) []extractor.CodeBlock {
+	var blocks []extractor.CodeBlock
 
 	for _, match := range e.patterns["interface"].FindAllStringSubmatch(content, -1) {
 		if len(match) > 1 {
@@ -359,7 +361,7 @@ func (e *GoExtractor) extractInterfaces(content, packageName string, imports []s
 			// Extract method signatures
 			methods := e.extractInterfaceMethods(interfaceContent)
 
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:     interfaceContent,
 				Type:        "interface",
 				Package:     packageName,
@@ -375,8 +377,8 @@ func (e *GoExtractor) extractInterfaces(content, packageName string, imports []s
 }
 
 // extractFunctions extracts Go functions
-func (e *GoExtractor) extractFunctions(content, packageName string, imports []string) []CodeBlock {
-	var blocks []CodeBlock
+func (e *GoExtractor) extractFunctions(content, packageName string, imports []string) []extractor.CodeBlock {
+	var blocks []extractor.CodeBlock
 
 	// Extract regular functions
 	for _, match := range e.patterns["function"].FindAllStringSubmatch(content, -1) {
@@ -396,7 +398,7 @@ func (e *GoExtractor) extractFunctions(content, packageName string, imports []st
 			// Check for error returns
 			returnsError := e.patterns["error_return"].MatchString(funcContent)
 
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  funcContent,
 				Type:     "function",
 				Package:  packageName,
@@ -419,7 +421,7 @@ func (e *GoExtractor) extractFunctions(content, packageName string, imports []st
 			typeName := match[1]
 			constructorContent := e.extractConstructorBody(content, typeName)
 
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  constructorContent,
 				Type:     "constructor",
 				Package:  packageName,
@@ -436,7 +438,7 @@ func (e *GoExtractor) extractFunctions(content, packageName string, imports []st
 			handlerName := match[1]
 			handlerContent := e.extractHttpHandlerBody(content, handlerName)
 
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  handlerContent,
 				Type:     "http_handler",
 				Package:  packageName,
@@ -453,7 +455,7 @@ func (e *GoExtractor) extractFunctions(content, packageName string, imports []st
 			middlewareName := match[1]
 			middlewareContent := e.extractMiddlewareBody(content, middlewareName)
 
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  middlewareContent,
 				Type:     "middleware",
 				Package:  packageName,
@@ -468,8 +470,8 @@ func (e *GoExtractor) extractFunctions(content, packageName string, imports []st
 }
 
 // extractMethods extracts Go methods
-func (e *GoExtractor) extractMethods(content, packageName string, imports []string) []CodeBlock {
-	var blocks []CodeBlock
+func (e *GoExtractor) extractMethods(content, packageName string, imports []string) []extractor.CodeBlock {
+	var blocks []extractor.CodeBlock
 
 	// Extract methods with receivers
 	for _, match := range e.patterns["method"].FindAllStringSubmatch(content, -1) {
@@ -480,7 +482,7 @@ func (e *GoExtractor) extractMethods(content, packageName string, imports []stri
 			// Check receiver type
 			isPointerReceiver := e.patterns["pointer_receiver"].MatchString(methodContent)
 
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  methodContent,
 				Type:     "method",
 				Package:  packageName,
@@ -501,8 +503,8 @@ func (e *GoExtractor) extractMethods(content, packageName string, imports []stri
 }
 
 // extractTypes extracts Go type declarations
-func (e *GoExtractor) extractTypes(content, packageName string, imports []string) []CodeBlock {
-	var blocks []CodeBlock
+func (e *GoExtractor) extractTypes(content, packageName string, imports []string) []extractor.CodeBlock {
+	var blocks []extractor.CodeBlock
 
 	// Extract type aliases
 	for _, match := range e.patterns["type_alias"].FindAllStringSubmatch(content, -1) {
@@ -516,7 +518,7 @@ func (e *GoExtractor) extractTypes(content, packageName string, imports []string
 				continue
 			}
 
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  typeContent,
 				Type:     "type_alias",
 				Package:  packageName,
@@ -533,7 +535,7 @@ func (e *GoExtractor) extractTypes(content, packageName string, imports []string
 			typeName := match[1]
 			typeContent := e.extractFunctionTypeBody(content, typeName)
 
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  typeContent,
 				Type:     "func_type",
 				Package:  packageName,
@@ -548,8 +550,8 @@ func (e *GoExtractor) extractTypes(content, packageName string, imports []string
 }
 
 // extractVariables extracts Go variables and constants
-func (e *GoExtractor) extractVariables(content, packageName string, imports []string) []CodeBlock {
-	var blocks []CodeBlock
+func (e *GoExtractor) extractVariables(content, packageName string, imports []string) []extractor.CodeBlock {
+	var blocks []extractor.CodeBlock
 
 	// Extract single variables
 	for _, match := range e.patterns["var_single"].FindAllStringSubmatch(content, -1) {
@@ -558,7 +560,7 @@ func (e *GoExtractor) extractVariables(content, packageName string, imports []st
 			varType := match[2]
 			varContent := fmt.Sprintf("var %s %s", varName, varType)
 
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  varContent,
 				Type:     "variable",
 				Package:  packageName,
@@ -575,7 +577,7 @@ func (e *GoExtractor) extractVariables(content, packageName string, imports []st
 			constName := match[1]
 			constContent := e.extractConstantBody(content, constName)
 
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  constContent,
 				Type:     "constant",
 				Package:  packageName,
@@ -590,8 +592,8 @@ func (e *GoExtractor) extractVariables(content, packageName string, imports []st
 }
 
 // extractTests extracts Go tests
-func (e *GoExtractor) extractTests(content, packageName string, imports []string) []CodeBlock {
-	var blocks []CodeBlock
+func (e *GoExtractor) extractTests(content, packageName string, imports []string) []extractor.CodeBlock {
+	var blocks []extractor.CodeBlock
 
 	// Extract test functions
 	for _, match := range e.patterns["test_function"].FindAllStringSubmatch(content, -1) {
@@ -599,7 +601,7 @@ func (e *GoExtractor) extractTests(content, packageName string, imports []string
 			testName := match[1]
 			testContent := e.extractTestBody(content, testName)
 
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  testContent,
 				Type:     "test",
 				Package:  packageName,
@@ -616,7 +618,7 @@ func (e *GoExtractor) extractTests(content, packageName string, imports []string
 			benchmarkName := match[1]
 			benchmarkContent := e.extractBenchmarkBody(content, benchmarkName)
 
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  benchmarkContent,
 				Type:     "benchmark",
 				Package:  packageName,
@@ -633,7 +635,7 @@ func (e *GoExtractor) extractTests(content, packageName string, imports []string
 			exampleName := match[1]
 			exampleContent := e.extractExampleBody(content, exampleName)
 
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  exampleContent,
 				Type:     "example",
 				Package:  packageName,
@@ -648,8 +650,8 @@ func (e *GoExtractor) extractTests(content, packageName string, imports []string
 }
 
 // extractGoMod extracts go.mod file
-func (e *GoExtractor) extractGoMod(content string) []CodeBlock {
-	var blocks []CodeBlock
+func (e *GoExtractor) extractGoMod(content string) []extractor.CodeBlock {
+	var blocks []extractor.CodeBlock
 
 	if e.patterns["go_mod"].MatchString(content) {
 		moduleName := ""
@@ -691,7 +693,7 @@ func (e *GoExtractor) extractGoMod(content string) []CodeBlock {
 			goModContent += ")\n"
 		}
 
-		blocks = append(blocks, CodeBlock{
+		blocks = append(blocks, extractor.CodeBlock{
 			Content:  goModContent,
 			Type:     "go_mod",
 			Package:  "",
@@ -704,8 +706,8 @@ func (e *GoExtractor) extractGoMod(content string) []CodeBlock {
 }
 
 // extractConfigFiles extracts other Go configuration files
-func (e *GoExtractor) extractConfigFiles(content string) []CodeBlock {
-	var blocks []CodeBlock
+func (e *GoExtractor) extractConfigFiles(content string) []extractor.CodeBlock {
+	var blocks []extractor.CodeBlock
 
 	// Extract go.work file
 	if e.patterns["go_work"].MatchString(content) {
@@ -717,7 +719,7 @@ func (e *GoExtractor) extractConfigFiles(content string) []CodeBlock {
 
 		workContent := fmt.Sprintf("go %s\n\nuse (\n\t.\n)", goVersion)
 
-		blocks = append(blocks, CodeBlock{
+		blocks = append(blocks, extractor.CodeBlock{
 			Content:  workContent,
 			Type:     "go_work",
 			Package:  "",
@@ -730,8 +732,8 @@ func (e *GoExtractor) extractConfigFiles(content string) []CodeBlock {
 }
 
 // extractWebFrameworkCode extracts web framework specific code
-func (e *GoExtractor) extractWebFrameworkCode(content, packageName string, imports []string) []CodeBlock {
-	var blocks []CodeBlock
+func (e *GoExtractor) extractWebFrameworkCode(content, packageName string, imports []string) []extractor.CodeBlock {
+	var blocks []extractor.CodeBlock
 
 	// Extract Gin routes
 	for _, match := range e.patterns["gin_route"].FindAllStringSubmatch(content, -1) {
@@ -739,7 +741,7 @@ func (e *GoExtractor) extractWebFrameworkCode(content, packageName string, impor
 			routePath := match[1]
 			routeContent := e.extractGinRoute(content, routePath)
 
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  routeContent,
 				Type:     "gin_route",
 				Package:  packageName,
@@ -756,7 +758,7 @@ func (e *GoExtractor) extractWebFrameworkCode(content, packageName string, impor
 			routePath := match[1]
 			routeContent := e.extractEchoRoute(content, routePath)
 
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  routeContent,
 				Type:     "echo_route",
 				Package:  packageName,
@@ -773,7 +775,7 @@ func (e *GoExtractor) extractWebFrameworkCode(content, packageName string, impor
 			routePath := match[1]
 			routeContent := e.extractHttpRoute(content, routePath)
 
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  routeContent,
 				Type:     "http_route",
 				Package:  packageName,
@@ -788,7 +790,7 @@ func (e *GoExtractor) extractWebFrameworkCode(content, packageName string, impor
 	if e.patterns["cobra_command"].MatchString(content) {
 		cobraContent := e.extractCobraCommand(content)
 		if cobraContent != "" {
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  cobraContent,
 				Type:     "cobra_command",
 				Package:  packageName,
@@ -803,7 +805,7 @@ func (e *GoExtractor) extractWebFrameworkCode(content, packageName string, impor
 	if e.patterns["wire_inject"].MatchString(content) {
 		wireContent := e.extractWireInjection(content)
 		if wireContent != "" {
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  wireContent,
 				Type:     "wire_injector",
 				Package:  packageName,
@@ -818,8 +820,8 @@ func (e *GoExtractor) extractWebFrameworkCode(content, packageName string, impor
 }
 
 // extractProtobufCode extracts gRPC/protobuf code
-func (e *GoExtractor) extractProtobufCode(content string, imports []string) []CodeBlock {
-	var blocks []CodeBlock
+func (e *GoExtractor) extractProtobufCode(content string, imports []string) []extractor.CodeBlock {
+	var blocks []extractor.CodeBlock
 
 	// Extract gRPC services
 	for _, match := range e.patterns["grpc_service"].FindAllStringSubmatch(content, -1) {
@@ -827,7 +829,7 @@ func (e *GoExtractor) extractProtobufCode(content string, imports []string) []Co
 			serviceName := match[1]
 			serviceContent := e.extractGrpcService(content, serviceName)
 
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  serviceContent,
 				Type:     "grpc_service",
 				Package:  "",
@@ -844,7 +846,7 @@ func (e *GoExtractor) extractProtobufCode(content string, imports []string) []Co
 			messageName := match[1]
 			messageContent := e.extractProtobufMessage(content, messageName)
 
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  messageContent,
 				Type:     "protobuf_message",
 				Package:  "",

@@ -1,10 +1,13 @@
 // javascript_extractor.go - JavaScript/TypeScript Code Extractor
-package main
+package plugins
 
 import (
 	"fmt"
+	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/bhangun/coto/pkg/extractor"
 )
 
 // JavaScriptExtractor extracts JavaScript and TypeScript code
@@ -177,8 +180,8 @@ func (e *JavaScriptExtractor) ShouldProcess(filename string) bool {
 }
 
 // Extract extracts JavaScript/TypeScript code blocks from content
-func (e *JavaScriptExtractor) Extract(content string) []CodeBlock {
-	var blocks []CodeBlock
+func (e *JavaScriptExtractor) Extract(content string) []extractor.CodeBlock {
+	var blocks []extractor.CodeBlock
 	
 	// Extract imports first
 	imports := e.extractImports(content)
@@ -242,8 +245,8 @@ func (e *JavaScriptExtractor) extractImports(content string) []string {
 }
 
 // extractClasses extracts JavaScript/TypeScript classes
-func (e *JavaScriptExtractor) extractClasses(content string, imports []string) []CodeBlock {
-	var blocks []CodeBlock
+func (e *JavaScriptExtractor) extractClasses(content string, imports []string) []extractor.CodeBlock {
+	var blocks []extractor.CodeBlock
 	
 	// Extract regular classes
 	for _, match := range e.patterns["class"].FindAllStringSubmatch(content, -1) {
@@ -251,7 +254,7 @@ func (e *JavaScriptExtractor) extractClasses(content string, imports []string) [
 			className := match[1]
 			classContent := e.extractClassBody(content, className)
 			
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  classContent,
 				Type:     "class",
 				Package:  e.extractPackageName(content),
@@ -268,7 +271,7 @@ func (e *JavaScriptExtractor) extractClasses(content string, imports []string) [
 			className := match[1]
 			classContent := e.extractAbstractClassBody(content, className)
 			
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:   classContent,
 				Type:      "abstract_class",
 				Package:   e.extractPackageName(content),
@@ -286,7 +289,7 @@ func (e *JavaScriptExtractor) extractClasses(content string, imports []string) [
 			componentName := match[1]
 			componentContent := e.extractReactClassComponent(content, componentName)
 			
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  componentContent,
 				Type:     "react_class_component",
 				Package:  e.extractPackageName(content),
@@ -301,8 +304,8 @@ func (e *JavaScriptExtractor) extractClasses(content string, imports []string) [
 }
 
 // extractFunctions extracts functions
-func (e *JavaScriptExtractor) extractFunctions(content string, imports []string) []CodeBlock {
-	var blocks []CodeBlock
+func (e *JavaScriptExtractor) extractFunctions(content string, imports []string) []extractor.CodeBlock {
+	var blocks []extractor.CodeBlock
 	
 	// Extract regular functions
 	for _, match := range e.patterns["function"].FindAllStringSubmatch(content, -1) {
@@ -310,7 +313,7 @@ func (e *JavaScriptExtractor) extractFunctions(content string, imports []string)
 			funcName := match[1]
 			funcContent := e.extractFunctionBody(content, funcName)
 			
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  funcContent,
 				Type:     "function",
 				Package:  e.extractPackageName(content),
@@ -327,7 +330,7 @@ func (e *JavaScriptExtractor) extractFunctions(content string, imports []string)
 			funcName := match[1]
 			funcContent := e.extractAsyncFunctionBody(content, funcName)
 			
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:   funcContent,
 				Type:      "async_function",
 				Package:   e.extractPackageName(content),
@@ -345,7 +348,7 @@ func (e *JavaScriptExtractor) extractFunctions(content string, imports []string)
 			funcName := match[1]
 			funcContent := e.extractArrowFunctionBody(content, funcName)
 			
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  funcContent,
 				Type:     "arrow_function",
 				Package:  e.extractPackageName(content),
@@ -360,8 +363,8 @@ func (e *JavaScriptExtractor) extractFunctions(content string, imports []string)
 }
 
 // extractVariables extracts variable declarations
-func (e *JavaScriptExtractor) extractVariables(content string, imports []string) []CodeBlock {
-	var blocks []CodeBlock
+func (e *JavaScriptExtractor) extractVariables(content string, imports []string) []extractor.CodeBlock {
+	var blocks []extractor.CodeBlock
 	
 	// Extract const declarations
 	for _, match := range e.patterns["const_declaration"].FindAllStringSubmatch(content, -1) {
@@ -369,7 +372,7 @@ func (e *JavaScriptExtractor) extractVariables(content string, imports []string)
 			varName := match[1]
 			varContent := e.extractVariableBody(content, varName, "const")
 			
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  varContent,
 				Type:     "const_declaration",
 				Package:  e.extractPackageName(content),
@@ -386,7 +389,7 @@ func (e *JavaScriptExtractor) extractVariables(content string, imports []string)
 			varName := match[1]
 			varContent := e.extractVariableBody(content, varName, "let")
 			
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  varContent,
 				Type:     "let_declaration",
 				Package:  e.extractPackageName(content),
@@ -403,7 +406,7 @@ func (e *JavaScriptExtractor) extractVariables(content string, imports []string)
 			componentName := match[1]
 			styledContent := e.extractStyledComponent(content, componentName)
 			
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  styledContent,
 				Type:     "styled_component",
 				Package:  e.extractPackageName(content),
@@ -418,15 +421,15 @@ func (e *JavaScriptExtractor) extractVariables(content string, imports []string)
 }
 
 // extractInterfaces extracts TypeScript interfaces
-func (e *JavaScriptExtractor) extractInterfaces(content string, imports []string) []CodeBlock {
-	var blocks []CodeBlock
+func (e *JavaScriptExtractor) extractInterfaces(content string, imports []string) []extractor.CodeBlock {
+	var blocks []extractor.CodeBlock
 	
 	for _, match := range e.patterns["interface"].FindAllStringSubmatch(content, -1) {
 		if len(match) > 1 {
 			interfaceName := match[1]
 			interfaceContent := e.extractInterfaceBody(content, interfaceName)
 			
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  interfaceContent,
 				Type:     "interface",
 				Package:  e.extractPackageName(content),
@@ -441,15 +444,15 @@ func (e *JavaScriptExtractor) extractInterfaces(content string, imports []string
 }
 
 // extractTypes extracts TypeScript type aliases
-func (e *JavaScriptExtractor) extractTypes(content string, imports []string) []CodeBlock {
-	var blocks []CodeBlock
+func (e *JavaScriptExtractor) extractTypes(content string, imports []string) []extractor.CodeBlock {
+	var blocks []extractor.CodeBlock
 	
 	for _, match := range e.patterns["type_alias"].FindAllStringSubmatch(content, -1) {
 		if len(match) > 1 {
 			typeName := match[1]
 			typeContent := e.extractTypeBody(content, typeName)
 			
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  typeContent,
 				Type:     "type_alias",
 				Package:  e.extractPackageName(content),
@@ -464,15 +467,15 @@ func (e *JavaScriptExtractor) extractTypes(content string, imports []string) []C
 }
 
 // extractEnums extracts TypeScript enums
-func (e *JavaScriptExtractor) extractEnums(content string, imports []string) []CodeBlock {
-	var blocks []CodeBlock
+func (e *JavaScriptExtractor) extractEnums(content string, imports []string) []extractor.CodeBlock {
+	var blocks []extractor.CodeBlock
 	
 	for _, match := range e.patterns["enum"].FindAllStringSubmatch(content, -1) {
 		if len(match) > 1 {
 			enumName := match[1]
 			enumContent := e.extractEnumBody(content, enumName)
 			
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  enumContent,
 				Type:     "enum",
 				Package:  e.extractPackageName(content),
@@ -487,8 +490,8 @@ func (e *JavaScriptExtractor) extractEnums(content string, imports []string) []C
 }
 
 // extractReactComponents extracts React components and hooks
-func (e *JavaScriptExtractor) extractReactComponents(content string, imports []string) []CodeBlock {
-	var blocks []CodeBlock
+func (e *JavaScriptExtractor) extractReactComponents(content string, imports []string) []extractor.CodeBlock {
+	var blocks []extractor.CodeBlock
 	
 	// Extract React function components
 	for _, match := range e.patterns["react_component"].FindAllStringSubmatch(content, -1) {
@@ -496,7 +499,7 @@ func (e *JavaScriptExtractor) extractReactComponents(content string, imports []s
 			componentName := match[1]
 			componentContent := e.extractReactComponentBody(content, componentName)
 			
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  componentContent,
 				Type:     "react_component",
 				Package:  e.extractPackageName(content),
@@ -513,7 +516,7 @@ func (e *JavaScriptExtractor) extractReactComponents(content string, imports []s
 			hookName := match[1]
 			hookContent := e.extractReactHookBody(content, hookName)
 			
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  hookContent,
 				Type:     "react_hook",
 				Package:  e.extractPackageName(content),
@@ -528,7 +531,7 @@ func (e *JavaScriptExtractor) extractReactComponents(content string, imports []s
 	if e.patterns["jsx_element"].MatchString(content) || e.patterns["jsx_self_closing"].MatchString(content) {
 		jsxContent := e.extractJSXContent(content)
 		if jsxContent != "" {
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  jsxContent,
 				Type:     "jsx",
 				Package:  e.extractPackageName(content),
@@ -543,8 +546,8 @@ func (e *JavaScriptExtractor) extractReactComponents(content string, imports []s
 }
 
 // extractVueComponents extracts Vue components
-func (e *JavaScriptExtractor) extractVueComponents(content string, imports []string) []CodeBlock {
-	var blocks []CodeBlock
+func (e *JavaScriptExtractor) extractVueComponents(content string, imports []string) []extractor.CodeBlock {
+	var blocks []extractor.CodeBlock
 	
 	// Extract Vue single-file components
 	if e.patterns["vue_component"].MatchString(content) {
@@ -553,7 +556,7 @@ func (e *JavaScriptExtractor) extractVueComponents(content string, imports []str
 				componentName := match[1]
 				vueContent := e.extractVueComponentBody(content, componentName)
 				
-				blocks = append(blocks, CodeBlock{
+				blocks = append(blocks, extractor.CodeBlock{
 					Content:  vueContent,
 					Type:     "vue_component",
 					Package:  e.extractPackageName(content),
@@ -569,7 +572,7 @@ func (e *JavaScriptExtractor) extractVueComponents(content string, imports []str
 	if e.patterns["vue_setup"].MatchString(content) || e.patterns["vue_composition"].MatchString(content) {
 		setupContent := e.extractVueSetupContent(content)
 		if setupContent != "" {
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  setupContent,
 				Type:     "vue_setup",
 				Package:  e.extractPackageName(content),
@@ -584,7 +587,7 @@ func (e *JavaScriptExtractor) extractVueComponents(content string, imports []str
 	if e.patterns["vue_template"].MatchString(content) {
 		templateContent := e.extractVueTemplate(content)
 		if templateContent != "" {
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  templateContent,
 				Type:     "vue_template",
 				Package:  e.extractPackageName(content),
@@ -598,8 +601,8 @@ func (e *JavaScriptExtractor) extractVueComponents(content string, imports []str
 }
 
 // extractNodeJSComponents extracts Node.js specific code
-func (e *JavaScriptExtractor) extractNodeJSComponents(content string, imports []string) []CodeBlock {
-	var blocks []CodeBlock
+func (e *JavaScriptExtractor) extractNodeJSComponents(content string, imports []string) []extractor.CodeBlock {
+	var blocks []extractor.CodeBlock
 	
 	// Extract Express routes
 	for _, match := range e.patterns["express_route"].FindAllStringSubmatch(content, -1) {
@@ -607,7 +610,7 @@ func (e *JavaScriptExtractor) extractNodeJSComponents(content string, imports []
 			routePath := match[1]
 			routeContent := e.extractExpressRoute(content, routePath)
 			
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  routeContent,
 				Type:     "express_route",
 				Package:  e.extractPackageName(content),
@@ -622,7 +625,7 @@ func (e *JavaScriptExtractor) extractNodeJSComponents(content string, imports []
 	if e.patterns["middleware"].MatchString(content) {
 		middlewareContent := e.extractMiddleware(content)
 		if middlewareContent != "" {
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  middlewareContent,
 				Type:     "middleware",
 				Package:  e.extractPackageName(content),
@@ -639,7 +642,7 @@ func (e *JavaScriptExtractor) extractNodeJSComponents(content string, imports []
 			controllerName := match[1]
 			controllerContent := e.extractControllerBody(content, controllerName)
 			
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  controllerContent,
 				Type:     "controller",
 				Package:  e.extractPackageName(content),
@@ -654,13 +657,13 @@ func (e *JavaScriptExtractor) extractNodeJSComponents(content string, imports []
 }
 
 // extractPackageJson extracts package.json
-func (e *JavaScriptExtractor) extractPackageJson(content string) []CodeBlock {
-	var blocks []CodeBlock
+func (e *JavaScriptExtractor) extractPackageJson(content string) []extractor.CodeBlock {
+	var blocks []extractor.CodeBlock
 	
 	if e.patterns["package_json"].MatchString(content) {
 		packageJson := e.extractJSONObject(content, `^\s*\{[^}]*\}`)
 		if packageJson != "" {
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  packageJson,
 				Type:     "package_json",
 				Package:  "",
@@ -674,14 +677,14 @@ func (e *JavaScriptExtractor) extractPackageJson(content string) []CodeBlock {
 }
 
 // extractConfigFiles extracts configuration files
-func (e *JavaScriptExtractor) extractConfigFiles(content string) []CodeBlock {
-	var blocks []CodeBlock
+func (e *JavaScriptExtractor) extractConfigFiles(content string) []extractor.CodeBlock {
+	var blocks []extractor.CodeBlock
 	
 	// Extract TypeScript config
 	if e.patterns["tsconfig"].MatchString(content) {
 		tsconfig := e.extractJSONObject(content, `\{\s*"compilerOptions"\s*:\s*\{[^}]*\}`)
 		if tsconfig != "" {
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  tsconfig,
 				Type:     "tsconfig",
 				Package:  "",
@@ -695,7 +698,7 @@ func (e *JavaScriptExtractor) extractConfigFiles(content string) []CodeBlock {
 	if e.patterns["babel_config"].MatchString(content) {
 		babelConfig := e.extractModuleExports(content)
 		if babelConfig != "" {
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  babelConfig,
 				Type:     "babel_config",
 				Package:  "",
@@ -709,7 +712,7 @@ func (e *JavaScriptExtractor) extractConfigFiles(content string) []CodeBlock {
 	if e.patterns["webpack_config"].MatchString(content) {
 		webpackConfig := e.extractModuleExports(content)
 		if webpackConfig != "" {
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  webpackConfig,
 				Type:     "webpack_config",
 				Package:  "",
@@ -723,7 +726,7 @@ func (e *JavaScriptExtractor) extractConfigFiles(content string) []CodeBlock {
 	if e.patterns["eslint_config"].MatchString(content) {
 		eslintConfig := e.extractModuleExports(content)
 		if eslintConfig != "" {
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  eslintConfig,
 				Type:     "eslint_config",
 				Package:  "",
@@ -737,8 +740,8 @@ func (e *JavaScriptExtractor) extractConfigFiles(content string) []CodeBlock {
 }
 
 // extractTests extracts test files
-func (e *JavaScriptExtractor) extractTests(content string, imports []string) []CodeBlock {
-	var blocks []CodeBlock
+func (e *JavaScriptExtractor) extractTests(content string, imports []string) []extractor.CodeBlock {
+	var blocks []extractor.CodeBlock
 	
 	// Extract Jest tests
 	for _, match := range e.patterns["jest_test"].FindAllStringSubmatch(content, -1) {
@@ -746,7 +749,7 @@ func (e *JavaScriptExtractor) extractTests(content string, imports []string) []C
 			testName := match[1]
 			testContent := e.extractTestBody(content, testName, "jest")
 			
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  testContent,
 				Type:     "jest_test",
 				Package:  e.extractPackageName(content),
@@ -763,7 +766,7 @@ func (e *JavaScriptExtractor) extractTests(content string, imports []string) []C
 			testName := match[1]
 			testContent := e.extractTestBody(content, testName, "mocha")
 			
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  testContent,
 				Type:     "mocha_test",
 				Package:  e.extractPackageName(content),

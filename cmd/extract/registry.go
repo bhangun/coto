@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/bhangun/coto/pkg/extractor"
+	"github.com/bhangun/coto/pkg/plugins"
 )
 
 // PluginRegistry manages all extractor plugins
@@ -65,30 +66,30 @@ func (r *PluginRegistry) GetAllPlugins() []extractor.ExtractorPlugin {
 // registerBuiltInPlugins registers all built-in extractor plugins
 func registerBuiltInPlugins(registry *PluginRegistry) {
 	// Register Java extractor
-	javaExtractor := NewJavaExtractor()
+	javaExtractor := plugins.NewJavaExtractor()
 	registry.Register(javaExtractor)
 
 	// Register Go extractor
-	goExtractor := NewGoExtractor()
+	goExtractor := plugins.NewGoExtractor()
 	registry.Register(goExtractor)
 
 	// Register Python extractor
-	pythonExtractor := NewPythonExtractor()
+	pythonExtractor := plugins.NewPythonExtractor()
 	registry.Register(pythonExtractor)
 
 	// Register JavaScript extractor
-	jsExtractor := NewJavaScriptExtractor()
+	jsExtractor := plugins.NewJavaScriptExtractor()
 	registry.Register(jsExtractor)
 
 	// Register Rust extractor
-	rustExtractor := NewRustExtractor()
+	rustExtractor := plugins.NewRustExtractor()
 	registry.Register(rustExtractor)
 
 	// Register Dart extractor
-	dartExtractor := NewDartExtractor()
+	dartExtractor := plugins.NewDartExtractor()
 	registry.Register(dartExtractor)
 
 	// Register generic extractor as fallback
-	genericExtractor := NewGenericExtractor()
+	genericExtractor := plugins.NewGenericExtractor()
 	registry.Register(genericExtractor)
 }

@@ -1,10 +1,12 @@
-package main
+package plugins
 
 import (
 	"fmt"
 	"path/filepath"
 	"regexp"
 	"strings"
+	
+	"github.com/bhangun/coto/pkg/extractor"
 )
 
 // DartExtractor extracts Dart and Flutter code
@@ -110,8 +112,8 @@ func (e *DartExtractor) ShouldProcess(filename string) bool {
 }
 
 // Extract extracts Dart/Flutter code blocks from content
-func (e *DartExtractor) Extract(content string) []CodeBlock {
-	var blocks []CodeBlock
+func (e *DartExtractor) Extract(content string) []extractor.CodeBlock {
+	var blocks []extractor.CodeBlock
 
 	// Extract imports first (used by other blocks)
 	imports := e.extractImports(content)
@@ -146,8 +148,8 @@ func (e *DartExtractor) extractImports(content string) []string {
 }
 
 // extractClasses extracts Dart classes
-func (e *DartExtractor) extractClasses(content string, imports []string) []CodeBlock {
-	var blocks []CodeBlock
+func (e *DartExtractor) extractClasses(content string, imports []string) []extractor.CodeBlock {
+	var blocks []extractor.CodeBlock
 
 	// Extract regular classes
 	for _, match := range e.patterns["class"].FindAllStringSubmatch(content, -1) {
@@ -158,7 +160,7 @@ func (e *DartExtractor) extractClasses(content string, imports []string) []CodeB
 			// Determine if it's abstract
 			isAbstract := strings.Contains(match[0], "abstract")
 
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  classContent,
 				Type:     "class",
 				Package:  e.extractPackageName(content),
@@ -181,7 +183,7 @@ func (e *DartExtractor) extractClasses(content string, imports []string) []CodeB
 			className := match[1]
 			classContent := e.extractClassBody(content, className)
 
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:   classContent,
 				Type:      "abstract_class",
 				Package:   e.extractPackageName(content),
@@ -197,8 +199,8 @@ func (e *DartExtractor) extractClasses(content string, imports []string) []CodeB
 }
 
 // extractWidgets extracts Flutter widgets
-func (e *DartExtractor) extractWidgets(content string, imports []string) []CodeBlock {
-	var blocks []CodeBlock
+func (e *DartExtractor) extractWidgets(content string, imports []string) []extractor.CodeBlock {
+	var blocks []extractor.CodeBlock
 
 	// Extract widget classes
 	for _, match := range e.patterns["widget_class"].FindAllStringSubmatch(content, -1) {
@@ -206,7 +208,7 @@ func (e *DartExtractor) extractWidgets(content string, imports []string) []CodeB
 			widgetName := match[1]
 			widgetContent := e.extractWidgetBody(content, widgetName)
 
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  widgetContent,
 				Type:     "widget",
 				Package:  e.extractPackageName(content),
@@ -223,7 +225,7 @@ func (e *DartExtractor) extractWidgets(content string, imports []string) []CodeB
 			stateName := match[1]
 			stateContent := e.extractStateBody(content, stateName)
 
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  stateContent,
 				Type:     "state",
 				Package:  e.extractPackageName(content),
@@ -238,7 +240,7 @@ func (e *DartExtractor) extractWidgets(content string, imports []string) []CodeB
 	if e.patterns["material_app"].MatchString(content) {
 		materialAppContent := e.extractMaterialApp(content)
 		if materialAppContent != "" {
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  materialAppContent,
 				Type:     "material_app",
 				Package:  e.extractPackageName(content),
@@ -253,7 +255,7 @@ func (e *DartExtractor) extractWidgets(content string, imports []string) []CodeB
 	if e.patterns["scaffold"].MatchString(content) {
 		scaffoldContent := e.extractScaffold(content)
 		if scaffoldContent != "" {
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  scaffoldContent,
 				Type:     "scaffold",
 				Package:  e.extractPackageName(content),
@@ -268,8 +270,8 @@ func (e *DartExtractor) extractWidgets(content string, imports []string) []CodeB
 }
 
 // extractFunctions extracts Dart functions
-func (e *DartExtractor) extractFunctions(content string, imports []string) []CodeBlock {
-	var blocks []CodeBlock
+func (e *DartExtractor) extractFunctions(content string, imports []string) []extractor.CodeBlock {
+	var blocks []extractor.CodeBlock
 
 	for _, match := range e.patterns["function"].FindAllStringSubmatch(content, -1) {
 		if len(match) > 1 {
@@ -288,7 +290,7 @@ func (e *DartExtractor) extractFunctions(content string, imports []string) []Cod
 				funcType = "setter"
 			}
 
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  funcContent,
 				Type:     funcType,
 				Package:  e.extractPackageName(content),
@@ -303,15 +305,15 @@ func (e *DartExtractor) extractFunctions(content string, imports []string) []Cod
 }
 
 // extractMixins extracts Dart mixins
-func (e *DartExtractor) extractMixins(content string, imports []string) []CodeBlock {
-	var blocks []CodeBlock
+func (e *DartExtractor) extractMixins(content string, imports []string) []extractor.CodeBlock {
+	var blocks []extractor.CodeBlock
 
 	for _, match := range e.patterns["mixin"].FindAllStringSubmatch(content, -1) {
 		if len(match) > 1 {
 			mixinName := match[1]
 			mixinContent := e.extractMixinBody(content, mixinName)
 
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  mixinContent,
 				Type:     "mixin",
 				Package:  e.extractPackageName(content),
@@ -326,15 +328,15 @@ func (e *DartExtractor) extractMixins(content string, imports []string) []CodeBl
 }
 
 // extractEnums extracts Dart enums
-func (e *DartExtractor) extractEnums(content string, imports []string) []CodeBlock {
-	var blocks []CodeBlock
+func (e *DartExtractor) extractEnums(content string, imports []string) []extractor.CodeBlock {
+	var blocks []extractor.CodeBlock
 
 	for _, match := range e.patterns["enum"].FindAllStringSubmatch(content, -1) {
 		if len(match) > 1 {
 			enumName := match[1]
 			enumContent := e.extractEnumBody(content, enumName)
 
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  enumContent,
 				Type:     "enum",
 				Package:  e.extractPackageName(content),
@@ -349,8 +351,8 @@ func (e *DartExtractor) extractEnums(content string, imports []string) []CodeBlo
 }
 
 // extractPubspec extracts pubspec.yaml configuration
-func (e *DartExtractor) extractPubspec(content string) []CodeBlock {
-	var blocks []CodeBlock
+func (e *DartExtractor) extractPubspec(content string) []extractor.CodeBlock {
+	var blocks []extractor.CodeBlock
 
 	// Check if this looks like a pubspec.yaml
 	if strings.Contains(content, "name:") &&
@@ -388,7 +390,7 @@ flutter:%s`,
 			devDepsContent,
 			flutterContent)
 
-		blocks = append(blocks, CodeBlock{
+		blocks = append(blocks, extractor.CodeBlock{
 			Content:  pubspec,
 			Type:     "pubspec",
 			Package:  "",
@@ -401,8 +403,8 @@ flutter:%s`,
 }
 
 // extractAnalysisOptions extracts analysis_options.yaml
-func (e *DartExtractor) extractAnalysisOptions(content string) []CodeBlock {
-	var blocks []CodeBlock
+func (e *DartExtractor) extractAnalysisOptions(content string) []extractor.CodeBlock {
+	var blocks []extractor.CodeBlock
 
 	if strings.Contains(content, "analyzer:") || strings.Contains(content, "linter:") {
 		// Try to extract the analysis options section
@@ -418,7 +420,7 @@ linter:%s`,
 				analyzerContent,
 				linterContent)
 
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  analysisOpts,
 				Type:     "analysis_options",
 				Package:  "",
@@ -432,8 +434,8 @@ linter:%s`,
 }
 
 // extractBuildConfigs extracts build configuration files
-func (e *DartExtractor) extractBuildConfigs(content string) []CodeBlock {
-	var blocks []CodeBlock
+func (e *DartExtractor) extractBuildConfigs(content string) []extractor.CodeBlock {
+	var blocks []extractor.CodeBlock
 
 	// Extract build.yaml if present
 	if strings.Contains(content, "builders:") || strings.Contains(content, "targets:") {
@@ -447,7 +449,7 @@ targets:%s`,
 				buildersContent,
 				targetsContent)
 
-			blocks = append(blocks, CodeBlock{
+			blocks = append(blocks, extractor.CodeBlock{
 				Content:  buildConfig,
 				Type:     "build_config",
 				Package:  "",
