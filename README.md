@@ -6,6 +6,7 @@ A powerful CLI tool to recursively combine file contents from directories and su
 
 - **Interactive Mode**: When run without arguments, Coto enters an interactive mode prompting for all options
 - **Recursive File Combination**: Combines files from directories and subdirectories
+- **File Renaming**: Rename files based on patterns, prefixes, suffixes, or regular expressions
 - **Multiple Output Formats**: Text, JSON, XML, and Markdown
 - **Flexible Filtering**: Filter by file extensions, size, patterns, and more
 - **Parallel Processing**: Process multiple files simultaneously for faster performance
@@ -72,13 +73,13 @@ sudo mv bin/coto /usr/local/bin/
 
 ## 🛠 Usage
 
-### Interactive Mode (Recommended)
+### Main Command (File Combination)
 Simply run Coto without any arguments to enter interactive mode:
 ```bash
 ./coto
 ```
 
-### Command Line Mode
+#### Command Line Mode
 ```bash
 # Basic usage
 coto -i ./src -o combined.txt
@@ -105,8 +106,63 @@ coto --config config.json
 coto --dry-run --verbose
 ```
 
+### Rename Command (New!)
+The rename command allows you to rename files in a directory based on patterns, prefixes, suffixes, or regular expressions:
 
-### Available Options
+```bash
+# Remove a prefix from filenames
+coto rename -dir ./videos -prefix "Lk21.De-"
+
+# Remove a suffix from filenames
+coto rename -dir ./files -suffix "_backup"
+
+# Remove a pattern anywhere in the filename
+coto rename -dir ./files -pattern "_old_"
+
+# Use regular expressions for complex renaming
+coto rename -dir ./data -regex "^(\d+)_(.+)$" -replacement "$2"  # Remove leading numbers and underscore
+
+# Dry run to preview changes without actually renaming
+coto rename -dir ./photos -suffix ".bak" --dry-run
+
+# Combine multiple operations
+coto rename -dir ./files -prefix "old_" -suffix "_backup" -pattern "temp"
+```
+
+#### Rename Command Options
+
+| Flag | Shorthand | Description |
+|------|-----------|-------------|
+| `--dir` | | Directory to rename files in (default: current directory) |
+| `--prefix` | | Prefix to remove from filenames |
+| `--suffix` | | Suffix to remove from filenames |
+| `--pattern` | | Pattern to remove from filenames (anywhere in the name) |
+| `--regex` | | Regular expression pattern to match |
+| `--replacement` | | Replacement string for regex (use with --regex) |
+| `--dry-run` | | Show what would be renamed without actually renaming |
+| `--verbose` | | Show detailed progress |
+| `--quiet` | | Suppress non-essential output |
+| `--force` | | Force rename even if target file exists |
+| `--help` | `-h` | Show help message |
+
+### Extract Command
+Extract code blocks from files:
+
+```bash
+# Extract from specific files
+coto extract -input file1.txt,file2.txt -language javascript
+
+# Extract from multiple files using glob patterns
+coto extract -input "*.txt" -language python -output extracted/
+
+# Parallel processing
+coto extract -input "*.js" -parallel 4 -verbose
+
+# Generate detailed report
+coto extract -input code.txt -report
+```
+
+### Available Main Command Options
 
 | Flag | Shorthand | Description |
 |------|-----------|-------------|
@@ -208,6 +264,8 @@ make demo
 - **AI Context Gathering**: Combine source code files for LLM context
 - **Documentation Aggregation**: Merge documentation files into a single document
 - **Code Review Preparation**: Bundle related files for review
+- **File Organization**: Rename files using patterns, prefixes, or suffixes (with `coto rename`)
+- **Media File Management**: Clean up media filenames by removing unwanted prefixes/suffixes
 - **Backup Operations**: Consolidate files from multiple directories
 - **Data Analysis**: Combine structured data files for processing
 

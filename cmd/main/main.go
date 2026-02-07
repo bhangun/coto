@@ -19,6 +19,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/bhangun/coto/cmd/extract"
+	"github.com/bhangun/coto/cmd/rename"
 )
 
 const (
@@ -217,10 +218,12 @@ func printMainHelp() {
 	fmt.Println("Usage:")
 	fmt.Println("  coto [options]                  # Combine files (default)")
 	fmt.Println("  coto extract [options]          # Extract code blocks")
+	fmt.Println("  coto rename [options]           # Rename files based on patterns")
 	fmt.Println("  coto version                    # Show version")
 	fmt.Println("  coto help                       # Show this help")
 	fmt.Println("\nFor command-specific help:")
 	fmt.Println("  coto extract --help")
+	fmt.Println("  coto rename --help")
 	fmt.Println()
 }
 
@@ -231,6 +234,14 @@ func main() {
 		case "extract":
 			// Run extract subcommand
 			cmd := extract.NewExtractCommand()
+			if err := cmd.Run(os.Args[2:]); err != nil {
+				fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+				os.Exit(1)
+			}
+			return
+		case "rename":
+			// Run rename subcommand
+			cmd := rename.NewRenameCommand()
 			if err := cmd.Run(os.Args[2:]); err != nil {
 				fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 				os.Exit(1)
