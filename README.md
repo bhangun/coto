@@ -111,7 +111,7 @@ The rename command allows you to rename files in a directory based on patterns, 
 
 ```bash
 # Remove a prefix from filenames
-coto rename -dir ./videos -prefix "Lk21.De-"
+coto rename -dir ./videos -prefix "thisuffix"
 
 # Remove a suffix from filenames
 coto rename -dir ./files -suffix "_backup"

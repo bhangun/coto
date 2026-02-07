@@ -152,7 +152,7 @@ func (c *RenameCommand) printHelp() {
 	fmt.Fprintf(os.Stderr, "  -h, -help              Show this help message\n")
 
 	fmt.Fprintf(os.Stderr, "\n%s Examples:\n", c.cyan("🚀"))
-	fmt.Fprintf(os.Stderr, "  coto rename -dir ./videos -pattern \"Lk21.De-\"\n")
+	fmt.Fprintf(os.Stderr, "  coto rename -dir ./videos -pattern \"thisuffix\"\n")
 	fmt.Fprintf(os.Stderr, "  coto rename -dir ./files -prefix \"old_\" -suffix \"_backup\"\n")
 	fmt.Fprintf(os.Stderr, "  coto rename -dir ./data -regex \"^\\d+_(.*)\" -replacement \"$1\"\n")
 	fmt.Fprintf(os.Stderr, "  coto rename -dir ./photos -suffix \".bak\" -dry-run\n")
@@ -175,7 +175,7 @@ func (c *RenameCommand) processDirectory(regex *regexp.Regexp) (int, error) {
 
 		oldPath := filepath.Join(c.directory, entry.Name())
 		newName := c.renameFile(entry.Name(), regex)
-		
+
 		// If the name didn't change, skip
 		if newName == entry.Name() {
 			if c.verbose && !c.quiet {
