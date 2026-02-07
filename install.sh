@@ -3,7 +3,7 @@
 # Coto Enhanced Installation Script
 set -e
 
-VERSION="v0.1.0"
+VERSION="v0.1.1"
 REPO="bhangun/coto"
 INSTALL_DIR="/usr/local/bin"
 BINARY_NAME="coto"
@@ -50,7 +50,7 @@ print_error() {
 print_banner() {
     echo -e "${CYAN}"
     echo "╔══════════════════════════════════════════════════════╗"
-    echo "║          Coto CLI Installer v0.1.0          ║"
+    echo "║          Coto CLI Installer v0.1.1          ║"
     echo "╚══════════════════════════════════════════════════════╝"
     echo -e "${NC}"
 }
