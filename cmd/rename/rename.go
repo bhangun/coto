@@ -24,6 +24,7 @@ type RenameCommand struct {
 	quiet       bool
 	dryRun      bool
 	force       bool
+	recursive   bool
 
 	// Internal fields
 	cyan   func(...interface{}) string
@@ -56,6 +57,7 @@ func (c *RenameCommand) Run(args []string) error {
 	fs.BoolVar(&c.quiet, "quiet", false, "Suppress non-essential output")
 	fs.BoolVar(&c.dryRun, "dry-run", false, "Show what would be renamed without actually renaming")
 	fs.BoolVar(&c.force, "force", false, "Force rename even if target file exists")
+	fs.BoolVar(&c.recursive, "recursive", false, "Process subdirectories recursively")
 
 	// Help flag
 	help := fs.Bool("help", false, "Show help")
@@ -147,6 +149,7 @@ func (c *RenameCommand) printHelp() {
 	fmt.Fprintf(os.Stderr, "  -verbose               Show detailed progress\n")
 	fmt.Fprintf(os.Stderr, "  -quiet                 Suppress non-essential output\n")
 	fmt.Fprintf(os.Stderr, "  -force                 Force rename even if target file exists\n")
+	fmt.Fprintf(os.Stderr, "  -recursive             Process subdirectories recursively\n")
 
 	fmt.Fprintf(os.Stderr, "\n%s Information:\n", c.cyan("ℹ️"))
 	fmt.Fprintf(os.Stderr, "  -h, -help              Show this help message\n")
@@ -158,62 +161,128 @@ func (c *RenameCommand) printHelp() {
 	fmt.Fprintf(os.Stderr, "  coto rename -dir ./photos -suffix \".bak\" -dry-run\n")
 }
 
-// processDirectory processes all files in the specified directory
+// processDirectory processes all files in the specified directory and subdirectories if recursive is enabled
 func (c *RenameCommand) processDirectory(regex *regexp.Regexp) (int, error) {
-	// Read directory contents
-	entries, err := os.ReadDir(c.directory)
-	if err != nil {
-		return 0, fmt.Errorf("failed to read directory: %v", err)
-	}
-
 	count := 0
-	for _, entry := range entries {
-		// Skip directories
-		if entry.IsDir() {
-			continue
-		}
-
-		oldPath := filepath.Join(c.directory, entry.Name())
-		newName := c.renameFile(entry.Name(), regex)
-
-		// If the name didn't change, skip
-		if newName == entry.Name() {
-			if c.verbose && !c.quiet {
-				fmt.Printf("%s Skipping %s (no change)\n", c.cyan("→"), entry.Name())
+	
+	if c.recursive {
+		// Walk the directory tree recursively
+		err := filepath.Walk(c.directory, func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
 			}
-			continue
+			
+			// Skip directories
+			if info.IsDir() {
+				return nil
+			}
+			
+			// Get the directory of the current file
+			dir := filepath.Dir(path)
+			filename := info.Name()
+			
+			newName := c.renameFile(filename, regex)
+			
+			// If the name didn't change, skip
+			if newName == filename {
+				if c.verbose && !c.quiet {
+					fmt.Printf("%s Skipping %s (no change)\n", c.cyan("→"), filename)
+				}
+				return nil
+			}
+			
+			newPath := filepath.Join(dir, newName)
+			
+			// Check if target file already exists
+			if !c.force {
+				if _, err := os.Stat(newPath); err == nil {
+					if !c.quiet {
+						fmt.Printf("%s Skipped %s -> %s (target already exists)\n", c.yellow("⚠"), filename, newName)
+					}
+					return nil
+				}
+			}
+			
+			if !c.quiet {
+				fmt.Printf("%s %s -> %s\n", c.cyan("→"), filename, newName)
+			}
+			
+			if !c.dryRun {
+				if err := os.Rename(path, newPath); err != nil {
+					if !c.quiet {
+						fmt.Printf("%s Error renaming %s: %v\n", c.red("✗"), filename, err)
+					}
+					return nil // Continue processing other files
+				}
+			} else {
+				if c.verbose && !c.quiet {
+					fmt.Printf("%s Would rename %s -> %s\n", c.yellow("→"), filename, newName)
+				}
+			}
+			
+			count++
+			
+			return nil
+		})
+		
+		if err != nil {
+			return count, fmt.Errorf("error walking directory tree: %v", err)
+		}
+	} else {
+		// Original behavior - only process the specified directory
+		entries, err := os.ReadDir(c.directory)
+		if err != nil {
+			return 0, fmt.Errorf("failed to read directory: %v", err)
 		}
 
-		newPath := filepath.Join(c.directory, newName)
+		for _, entry := range entries {
+			// Skip directories
+			if entry.IsDir() {
+				continue
+			}
 
-		// Check if target file already exists
-		if !c.force {
-			if _, err := os.Stat(newPath); err == nil {
-				if !c.quiet {
-					fmt.Printf("%s Skipped %s -> %s (target already exists)\n", c.yellow("⚠"), entry.Name(), newName)
+			oldPath := filepath.Join(c.directory, entry.Name())
+			newName := c.renameFile(entry.Name(), regex)
+
+			// If the name didn't change, skip
+			if newName == entry.Name() {
+				if c.verbose && !c.quiet {
+					fmt.Printf("%s Skipping %s (no change)\n", c.cyan("→"), entry.Name())
 				}
 				continue
 			}
-		}
 
-		if !c.quiet {
-			fmt.Printf("%s %s -> %s\n", c.cyan("→"), entry.Name(), newName)
-		}
+			newPath := filepath.Join(c.directory, newName)
 
-		if !c.dryRun {
-			if err := os.Rename(oldPath, newPath); err != nil {
-				if !c.quiet {
-					fmt.Printf("%s Error renaming %s: %v\n", c.red("✗"), entry.Name(), err)
+			// Check if target file already exists
+			if !c.force {
+				if _, err := os.Stat(newPath); err == nil {
+					if !c.quiet {
+						fmt.Printf("%s Skipped %s -> %s (target already exists)\n", c.yellow("⚠"), entry.Name(), newName)
+					}
+					continue
 				}
-				continue
 			}
-		} else {
-			if c.verbose && !c.quiet {
-				fmt.Printf("%s Would rename %s -> %s\n", c.yellow("→"), entry.Name(), newName)
-			}
-		}
 
-		count++
+			if !c.quiet {
+				fmt.Printf("%s %s -> %s\n", c.cyan("→"), entry.Name(), newName)
+			}
+
+			if !c.dryRun {
+				if err := os.Rename(oldPath, newPath); err != nil {
+					if !c.quiet {
+						fmt.Printf("%s Error renaming %s: %v\n", c.red("✗"), entry.Name(), err)
+					}
+					continue
+				}
+			} else {
+				if c.verbose && !c.quiet {
+					fmt.Printf("%s Would rename %s -> %s\n", c.yellow("→"), entry.Name(), newName)
+				}
+			}
+
+			count++
+		}
 	}
 
 	return count, nil
