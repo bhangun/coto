@@ -17,9 +17,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/fatih/color"
 	"github.com/bhangun/coto/cmd/extract"
 	"github.com/bhangun/coto/cmd/rename"
+	"github.com/fatih/color"
 )
 
 const (
@@ -216,15 +216,59 @@ func printMainHelp() {
 	fmt.Println("coto - Code Combiner and Extractor Tool")
 	fmt.Printf("Version: %s\n\n", version)
 	fmt.Println("Usage:")
-	fmt.Println("  coto [options]                  # Combine files (default)")
-	fmt.Println("  coto extract [options]          # Extract code blocks")
-	fmt.Println("  coto rename [options]           # Rename files based on patterns")
-	fmt.Println("  coto version                    # Show version")
-	fmt.Println("  coto help                       # Show this help")
-	fmt.Println("\nFor command-specific help:")
+	fmt.Println("  coto [options]                         Combine files (default)")
+	fmt.Println("  coto extract [options]                 Extract code blocks")
+	fmt.Println("  coto rename [rename options]           Rename files and directories")
+	fmt.Println("  coto version                           Show version")
+	fmt.Println("  coto help                              Show this help")
+	fmt.Println()
+	fmt.Println("Combine options (default command):")
+	fmt.Println("  -i, -input DIR                         Input directory (default \".\")")
+	fmt.Println("  -o, -output FILE                      Output file (default \"combined.txt\")")
+	fmt.Println("      -ext EXTENSIONS                   Comma-separated extensions to include")
+	fmt.Println("  -eh, -exclude-hidden                  Exclude hidden files and directories")
+	fmt.Println("      -min-size BYTES                   Minimum file size")
+	fmt.Println("      -max-size BYTES                   Maximum file size (0 means unlimited)")
+	fmt.Println("      -include PATTERN                  Include matching paths and folder descendants (regex supported)")
+	fmt.Println("      -exclude PATTERN                  Exclude matching paths and folder descendants (regex supported)")
+	fmt.Println("      -format FORMAT                    Output: text, json, xml, or markdown")
+	fmt.Println("      -compress                         Compress the output with gzip")
+	fmt.Println("      -config FILE                      Load options from a JSON config file")
+	fmt.Println("      -parallel N                       Number of files to process in parallel")
+	fmt.Println("      -dry-run                          Preview files without writing output")
+	fmt.Println("      -quiet                            Suppress non-essential output")
+	fmt.Println("      -verbose                          Show detailed progress")
+	fmt.Println()
+	fmt.Println("Rename options (search-and-replace):")
+	fmt.Println("  -d, --directory DIR                    Starting directory (default \".\"); -dir is supported")
+	fmt.Println("  -s, --search TEXT                      Text or regex to find (requires -r)")
+	fmt.Println("  -r, --replace TEXT                     Replacement; use an empty value to remove matches")
+	fmt.Println("      --regex                            Treat -s as a regex")
+	fmt.Println("  -i, --ignore-case                      Match without regard to case")
+	fmt.Println("  -D, --max-depth N                      Maximum depth below the starting directory")
+	fmt.Println("      --recursive / --no-recursive       Include descendants / limit to starting directory")
+	fmt.Println("      --file / --directories / --both    Select files, directories, or both")
+	fmt.Println("  -e, --exclude GLOB                     Exclude matching paths (repeatable)")
+	fmt.Println("  -H, --hidden                           Include hidden files and directories")
+	fmt.Println("      --dry-run                          Preview changes without renaming")
+	fmt.Println("      --force                            Allow an existing target to be replaced")
+	fmt.Println("      --verbose / --quiet                Control progress output")
+	fmt.Println()
+	fmt.Println("Existing Coto rename options:")
+	fmt.Println("      --pattern TEXT                     Remove a substring from filenames")
+	fmt.Println("      --prefix TEXT                      Remove a filename prefix")
+	fmt.Println("      --suffix TEXT                      Remove a filename suffix")
+	fmt.Println("      --regex PATTERN --replacement TEXT Regex rename syntax remains supported")
+	fmt.Println()
+	fmt.Println("Examples:")
+	fmt.Println("  coto rename -d ./project -s old -r new                  # Recursive; files and directories")
+	fmt.Println("  coto rename -d ./files --regex -s '^draft_' -r final_ -i --dry-run")
+	fmt.Println("  coto rename -d ./project -s old -r new --file --no-recursive")
+	fmt.Println("  coto rename -dir ./videos -prefix old_                   # Existing Coto syntax")
+	fmt.Println()
+	fmt.Println("For complete command-specific help:")
 	fmt.Println("  coto extract --help")
 	fmt.Println("  coto rename --help")
-	fmt.Println()
 }
 
 func main() {
@@ -271,8 +315,8 @@ func runCombineCommand() {
 	excludeShort := flag.Bool("eh", true, "Exclude hidden files (shorthand)")
 	maxFileSize := flag.Int64("max-size", 0, "Maximum file size in bytes (0 = unlimited)")
 	minFileSize := flag.Int64("min-size", 0, "Minimum file size in bytes")
-	excludePattern := flag.String("exclude", "", "Regex pattern to exclude files")
-	includePattern := flag.String("include", "", "Regex pattern to include files")
+	excludePattern := flag.String("exclude", "", "Path/name pattern to exclude (excludes folder descendants; regex also supported)")
+	includePattern := flag.String("include", "", "Path/name pattern to include (includes folder descendants; regex also supported)")
 	outputFormat := flag.String("format", "text", "Output format: text, json, xml, markdown")
 	compress := flag.Bool("compress", false, "Compress output with gzip")
 	dryRun := flag.Bool("dry-run", false, "Show what would be processed without writing")
@@ -340,11 +384,11 @@ func runCombineCommand() {
 		}
 
 		// Prompt for exclude pattern
-		excludePat := promptUser("Regex pattern to exclude files (optional)", "")
+		excludePat := promptUser("Path/name pattern to exclude (optional; regex also supported)", "")
 		*excludePattern = excludePat
 
 		// Prompt for include pattern
-		includePat := promptUser("Regex pattern to include files (optional)", "")
+		includePat := promptUser("Path/name pattern to include (optional; includes folder descendants; regex also supported)", "")
 		*includePattern = includePat
 
 		// Prompt for parallel processing with validation
@@ -459,16 +503,16 @@ func runCombineCommand() {
 
 	// Validate patterns
 	var excludeRegex, includeRegex *regexp.Regexp
-	if *excludePattern != "" {
-		re, err := regexp.Compile(*excludePattern)
+	if config.ExcludePattern != "" {
+		re, err := compilePathFilter(config.ExcludePattern)
 		if err != nil {
 			fmt.Printf("%s Invalid exclude pattern: %v\n", red("✗"), err)
 			os.Exit(1)
 		}
 		excludeRegex = re
 	}
-	if *includePattern != "" {
-		re, err := regexp.Compile(*includePattern)
+	if config.IncludePattern != "" {
+		re, err := compilePathFilter(config.IncludePattern)
 		if err != nil {
 			fmt.Printf("%s Invalid include pattern: %v\n", red("✗"), err)
 			os.Exit(1)
@@ -500,10 +544,17 @@ func runCombineCommand() {
 		}
 
 		if info.IsDir() {
-			stats.Directories++
 			if config.ExcludeHidden && isHidden(info.Name()) {
 				return filepath.SkipDir
 			}
+			relative, relErr := filepath.Rel(config.InputDir, path)
+			if relErr != nil {
+				return fmt.Errorf("resolve directory path %q: %w", path, relErr)
+			}
+			if pathFilterMatches(config.ExcludePattern, excludeRegex, relative) {
+				return filepath.SkipDir
+			}
+			stats.Directories++
 			return nil
 		}
 
@@ -588,14 +639,55 @@ func shouldProcessFile(path string, info os.FileInfo, config Config,
 
 	// Check regex patterns
 	relPath, _ := filepath.Rel(config.InputDir, path)
-	if excludeRegex != nil && excludeRegex.MatchString(relPath) {
+	if pathFilterMatches(config.ExcludePattern, excludeRegex, relPath) {
 		return false
 	}
-	if includeRegex != nil && !includeRegex.MatchString(relPath) {
+	if config.IncludePattern != "" && !pathFilterMatches(config.IncludePattern, includeRegex, relPath) {
 		return false
 	}
 
 	return true
+}
+
+func isRegexPathPattern(pattern string) bool {
+	return strings.ContainsAny(pattern, `\|^$+(){}`) ||
+		strings.Contains(pattern, ".*") || strings.Contains(pattern, ".+")
+}
+
+func compilePathFilter(pattern string) (*regexp.Regexp, error) {
+	if !isRegexPathPattern(pattern) {
+		_, err := filepath.Match(pattern, "")
+		return nil, err
+	}
+	compiled, regexErr := regexp.Compile(pattern)
+	if regexErr == nil {
+		return compiled, nil
+	}
+	return nil, regexErr
+}
+
+func pathFilterMatches(pattern string, compiledRegex *regexp.Regexp, relativePath string) bool {
+	if pattern == "" {
+		return false
+	}
+
+	relativePath = filepath.Clean(relativePath)
+	components := strings.Split(relativePath, string(filepath.Separator))
+	if !strings.Contains(pattern, string(filepath.Separator)) {
+		for _, component := range components {
+			if matched, err := filepath.Match(pattern, component); err == nil && matched {
+				return true
+			}
+		}
+	}
+	for start := range components {
+		candidate := filepath.Join(components[:start+1]...)
+		if matched, err := filepath.Match(pattern, candidate); err == nil && matched {
+			return true
+		}
+	}
+
+	return isRegexPathPattern(pattern) && compiledRegex != nil && compiledRegex.MatchString(relativePath)
 }
 
 func processFilesSequential(paths []string, baseDir string, verbose, quiet bool, stats *Stats) []FileInfo {
@@ -984,8 +1076,8 @@ func init() {
 		fmt.Fprintf(os.Stderr, "\n%s Filtering Options:\n", cyan("🔍"))
 		fmt.Fprintf(os.Stderr, "  -max-size int            Maximum file size in bytes (0 = unlimited)\n")
 		fmt.Fprintf(os.Stderr, "  -min-size int            Minimum file size in bytes\n")
-		fmt.Fprintf(os.Stderr, "  -include string          Regex pattern to include files\n")
-		fmt.Fprintf(os.Stderr, "  -exclude string          Regex pattern to exclude files\n")
+		fmt.Fprintf(os.Stderr, "  -include string          Include path/name and folder descendants (regex supported)\n")
+		fmt.Fprintf(os.Stderr, "  -exclude string          Exclude path/name and folder descendants (regex supported)\n")
 
 		fmt.Fprintf(os.Stderr, "\n%s Output Options:\n", cyan("📄"))
 		fmt.Fprintf(os.Stderr, "  -format string           Output format: text, json, xml, markdown (default \"text\")\n")
